@@ -20,6 +20,10 @@ class DbSeeder extends Seeder
         DB::unprepared(
             file_get_contents($path)
         );
+
+        $this->call([
+            ProductSeeder::class,
+        ]);
         
     }
 }
