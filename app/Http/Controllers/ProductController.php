@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Js;
 use Inertia\Inertia;
+use Illuminate\Http\JsonResponse;
 
 class ProductController extends Controller
 {
@@ -35,7 +37,7 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:100',
-            'type' => 'required|in:savings,loan,credit_card,investment',
+            'type' => 'required',
             'description' => 'nullable|string',
             'interest_rate' => 'nullable|numeric|min:0|max:100',
             'min_balance' => 'nullable|numeric|min:0',
@@ -44,6 +46,8 @@ class ProductController extends Controller
             'currency' => 'required|string|size:3',
             'is_active' => 'required|boolean',
         ]);
+
+        $validated['is_active'] = filter_var($validated['is_active'], FILTER_VALIDATE_BOOLEAN);
 
         Product::create($validated);
 
@@ -67,7 +71,7 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:100',
-            'type' => 'required|in:savings,loan,credit_card,investment',
+            'type' => 'required',
             'description' => 'nullable|string',
             'interest_rate' => 'nullable|numeric|min:0|max:100',
             'min_balance' => 'nullable|numeric|min:0',
@@ -76,6 +80,7 @@ class ProductController extends Controller
             'currency' => 'required|string|size:3',
             'is_active' => 'required|boolean',
         ]);
+        $validated['is_active'] = filter_var($validated['is_active'], FILTER_VALIDATE_BOOLEAN);
 
         $product->update($validated);
 
@@ -85,10 +90,18 @@ class ProductController extends Controller
     /**
      * Remove the specified product from storage.
      */
-    public function destroy(Product $product)
+    public function destroy(Request $request, $productId): JsonResponse
     {
-        $product->delete();
+        try {
+            $product = Product::findOrFail($productId);
+            $product->delete();
 
-        return redirect()->route('products.index')->with('success', 'Product deleted successfully.');
+            return response()->json(['message' => 'Product deleted successfully.'], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to delete the product.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

@@ -1,5 +1,5 @@
 <template>
-  <div class="relative">
+  <div class="relative gap-2">
     <label :for="id" class="block text-sm font-medium text-gray-700">{{ label }}</label>
     <select
       :id="id"

@@ -15,7 +15,7 @@ class ProductSeeder extends Seeder
         DB::table('products')->insert([
             [
                 'name' => 'Personal Loan',
-                'type' => 'loan',
+                'type' => 'Loan',
                 'description' => 'A loan for personal use with flexible terms.',
                 'interest_rate' => 12.50,
                 'min_balance' => null,
@@ -28,7 +28,7 @@ class ProductSeeder extends Seeder
             ],
             [
                 'name' => 'Savings Account',
-                'type' => 'savings',
+                'type' => 'Savings',
                 'description' => 'A savings account with competitive interest rates.',
                 'interest_rate' => 3.75,
                 'min_balance' => 1000.00,
@@ -41,7 +41,7 @@ class ProductSeeder extends Seeder
             ],
             [
                 'name' => 'Credit Card',
-                'type' => 'credit_card',
+                'type' => 'Credit Card',
                 'description' => 'A credit card with a low annual fee.',
                 'interest_rate' => 18.00,
                 'min_balance' => null,
@@ -54,7 +54,7 @@ class ProductSeeder extends Seeder
             ],
             [
                 'name' => 'Fixed Deposit',
-                'type' => 'investment',
+                'type' => 'Investment',
                 'description' => 'A fixed deposit account with high returns.',
                 'interest_rate' => 6.50,
                 'min_balance' => 5000.00,

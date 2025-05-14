@@ -18,7 +18,7 @@ class MemberController extends Controller
     {
 
         return Inertia::render('member/index', [
-            'members' => Member::all(),
+            'members' => Member::all()->where('is_deleted', false),
         ]);
     }
 
