@@ -6,6 +6,7 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\RelationshipController;
 use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\DistrictController;
+use App\Http\Controllers\LoanController;
 use App\Http\Controllers\ProductController;
 
 Route::middleware('auth',)->group(function () {
@@ -17,6 +18,8 @@ Route::middleware('auth',)->group(function () {
     Route::put('/members/{id}', [MemberController::class, 'update'])->name('members.update');
     Route::delete('/members/{id}', [MemberController::class, 'destroy'])->name('member.destroy');
 
+    Route::get('/members/{member}/sell-product', [LoanController::class, 'sellProduct'])->name('members.sell-product');
+    Route::post('/members/{member}/sell-product', [LoanController::class, 'storeSoldProduct'])->name('members.sell-product.store');
 
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
     Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');

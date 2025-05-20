@@ -453,7 +453,7 @@ const submit = () => {
                             Were you previously a member of this co-operative society?
                         </Label>
                     </div>
-                    <div v-if="is_previous_member" class="grid gap-6 mt-4">
+                    <div v-if="form.is_previous_member" class="grid gap-6 mt-4">
                         <div class="grid gap-2">
                             <Label for="previous_member_number">Previous Member Number</Label>
                             <Input id="previous_member_number" type="text" v-model="form.previous_member_number"

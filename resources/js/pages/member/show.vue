@@ -2,6 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
+import { Button } from '@/components/ui/button';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -49,10 +50,12 @@ console.log('Member:', props.member);
                                 <h1 class="text-xl font-bold">{{ member.name }}</h1>
                                 <p class="text-gray-700">Has an active loan.</p>
                                 <div class="mt-6 flex flex-wrap gap-4 justify-center">
-                                    <a href="#"
-                                        class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">Contact</a>
-                                    <a href="#"
-                                        class="bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded">Resume</a>
+                                    <Link :href="`/members/${member.id}/sell-product`">
+                                        <Button variant="submit">Sell Product</Button>
+                                    </Link>
+                                    <Link :href="`/members/${member.account_number}/edit`">
+                                        <Button variant="submit">Sell Product</Button>
+                                    </Link>
                                 </div>
                             </div>
                             <hr class="my-6 border-t border-gray-300">
