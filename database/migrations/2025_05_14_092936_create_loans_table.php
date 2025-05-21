@@ -13,56 +13,59 @@ return new class extends Migration
     {
         Schema::create('loans', function (Blueprint $table) {
             $table->id();
-            // $table->string('code_number')->nullable();
-            // $table->string('loan_number')->unique();
-            $table->foreignId('member_id')->constrained('members')->onDelete('cascade');
-            $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
-            $table->decimal('interest_rate', 5, 2)->nullable();
-            $table->decimal('min_balance', 15, 2)->nullable();
-            $table->decimal('max_loan_amount', 15, 2)->nullable();
-            $table->integer('loan_term_months')->nullable();
+            $table->string('code_number')->nullable();
+            $table->string('loan_number')->nullable();
+            $table->foreignId('member_id')->constrained()->onDelete('cascade');
 
+            $table->foreignId('product_id')->constrained()->onDelete('restrict');
+            $table->decimal('interest_rate', 5, 2)->default(0);
+            $table->decimal('min_balance', 15, 2)->nullable()->default(0);
+            $table->decimal('max_loan_amount', 15, 2)->nullable()->default(0);
+            $table->integer('loan_term_months')->default(0);
+
+            // income and expense
             $table->string('office_address')->nullable();
             $table->string('occupation')->nullable();
             $table->string('designation')->nullable();
             $table->string('office_contact')->nullable();
 
-            $table->decimal('self_income')->nullable();
-            $table->decimal('family_income')->nullable();
-            $table->decimal('total_income')->nullable();
+            $table->decimal('self_income')->default(0);
+            $table->decimal('family_income')->default(0);
+            $table->decimal('total_income')->default(0);
 
-            $table->decimal('rent')->nullable();
-            $table->decimal('food_expense')->nullable();
-            $table->decimal('education_expense')->nullable();
-            $table->decimal('transport_expense')->nullable();
-            $table->decimal('other_expense')->nullable();
-            $table->decimal('total_expense')->nullable();
+            $table->decimal('rent')->default(0);
+            $table->decimal('food_expense')->default(0);
+            $table->decimal('education_expense')->default(0);
+            $table->decimal('transport_expense')->default(0);
+            $table->decimal('other_expense')->default(0);
+            $table->decimal('total_expense')->default(0);
 
-            $table->decimal('current_share_amount')->nullable();
-            $table->decimal('before_share_amount')->nullable();
-
-            $table->decimal('loan_amount')->nullable();
-            $table->string('loan_type')->nullable();
+            // loan details
+            $table->decimal('loan_amount')->default(0);
             $table->string('loan_purpose')->nullable();
-
-            $table->integer('previous_loans')->nullable();
-            $table->boolean('is_reg_paid')->default(true);
-
-            $table->integer('total_installment')->nullable();
+            $table->string('loan_type')->nullable();
+            $table->decimal('uregent_fee')->default(0);
+            $table->integer('total_installment')->default(0);
+            $table->date('installment_start_date')->nullable();
             $table->string('first_installment')->nullable();
 
-            $table->decimal('other_loan_amount')->nullable();
-            $table->integer('other_loan_installment')->nullable();
-            $table->decimal('other_loan_remaining')->nullable();
+            $table->decimal('other_loan_amount')->default(0);
+            $table->integer('other_loan_installment')->default(0);
+            $table->decimal('other_loan_remaining')->default(0);
 
-            $table->integer('loan_surety_id')->nullable();
-            $table->string('surety_name')->nullable();
-            $table->string('self_surety_amount')->nullable();
+            $table->string('loan_collateral_type')->nullable();
+            $table->string('self_deposite_amount')->nullable();
 
-            $table->date('start_date')->nullable();
-            $table->date('end_date')->nullable();
-            $table->string('status')->default('active'); // e.g., active, closed, defaulted
+            // family information
+            $table->integer('family_member')->default(0);
+
+            $table->string('status')->default('pending');
+            $table->boolean('is_active')->default(true);
+            $table->boolean('is_delete')->default(false);
             $table->timestamps();
+
+            // Indexes for performance
+            $table->index(['member_id', 'product_id']);
         });
     }
 
