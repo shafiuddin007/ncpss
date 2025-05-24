@@ -6,19 +6,95 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/InputError.vue';
-import { watch, reactive, ref, computed } from 'vue';
+import { watch, reactive, ref } from 'vue';
+
+// Types
+type Product = {
+    id: number;
+    name: string;
+    min_balance?: string | number;
+    max_loan_amount?: string | number;
+    interest_rate?: string | number;
+    loan_term_months?: string | number;
+};
+
+type LoanInfo = {
+    current_share_amount?: string | number;
+    share_b4_3m?: string | number;
+    previous_loan?: string | number;
+};
+
+type Grantor = {
+    member_id: string;
+    deposit_amount: string;
+    loan_amount: string;
+    // document: File | null;
+};
+
+type FamilyMember = {
+    // name: string;
+    relation: string;
+    member_id: string;
+    contact_no: string;
+    current_deposit: string;
+    current_loan: string;
+    // signeture: File | null;
+};
+
+type FormFields = {
+    code_number: string;
+    loan_number: string;
+    member_id: any;
+    product_id: string;
+    interest_rate: string;
+    min_balance: string;
+    max_loan_amount: string;
+    loan_term_months: string;
+    office_address: string;
+    occupation: string;
+    designation: string;
+    office_contact: string;
+    self_income: string;
+    family_income: string;
+    total_income: string;
+    rent: string;
+    food_expense: string;
+    education_expense: string;
+    transport_expense: string;
+    other_expense: string;
+    total_expense: string;
+    current_share_amount: string;
+    before_share_amount: string;
+    loan_amount: string;
+    loan_type: string;
+    loan_purpose: string;
+    previous_loans: string;
+    total_installment: string;
+    first_installment: string;
+    other_loan_amount: string;
+    other_loan_installment: string;
+    other_loan_remaining: string;
+    loan_surety_id: string;
+    surety_name: string;
+    self_deposit_amount: string;
+    start_date: string;
+    status: string;
+    is_urgent: boolean;
+    urgent_fee: number;
+    loan_surety_type: string;
+    family_member: string;
+    grantors: Grantor[];
+    family_members: FamilyMember[];
+    application?: string; // Add this line to allow application-level errors
+};
 
 const props = defineProps<{
-    member: any,
-    products: Array<{
-        id: number,
-        name: string,
-        min_balance?: string | number,
-        max_loan_amount?: string | number,
-        interest_rate?: string | number,
-        loan_term_months?: string | number
-    }>
+    member: any;
+    products: Product[];
+    loan_info: LoanInfo;
 }>();
+
+
 
 // Define breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
@@ -26,7 +102,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: `Sell Product`, href: '' },
 ];
 
-// steps
+// Steps configuration
 const steps = [
     { title: 'Product Information', href: '#product-info' },
     { title: 'Income & Expense', href: '#income-expence' },
@@ -35,32 +111,12 @@ const steps = [
     { title: 'Submit', href: '#submit' },
 ];
 
-const stepContents = [
-    'Product Information',
-    'Income & Expense',
-    'Loan Information',
-    'Family Member',
-    'Submit',
-];
-
 const currentStep = ref(0);
+const isConfirmed = ref(false);
+const showConfirmationError = ref(false);
 
-// Vue way to handle step navigation
-function prevStep() {
-    if (currentStep.value > 0) {
-        currentStep.value--;
-    }
-}
-
-function nextStep() {
-    if (currentStep.value < steps.length - 1) {
-        currentStep.value++;
-    } else {
-        handleSubmit();
-    }
-}
-
-const form = useForm({
+// Form initialization
+const form = useForm<FormFields>({
     code_number: '',
     loan_number: '',
     member_id: props.member.id,
@@ -88,7 +144,6 @@ const form = useForm({
     loan_type: '',
     loan_purpose: '',
     previous_loans: '',
-    is_reg_paid: false,
     total_installment: '',
     first_installment: '',
     other_loan_amount: '',
@@ -96,37 +151,24 @@ const form = useForm({
     other_loan_remaining: '',
     loan_surety_id: '',
     surety_name: '',
-    self_deposit_amout: '',
+    self_deposit_amount: '',
     start_date: '',
-    end_date: '',
     status: 'active',
     is_urgent: false,
     urgent_fee: 1000,
     loan_surety_type: '',
     family_member: '',
-
-    grantors: [] as Array<{
-        member_id: string,
-        deposit_amount: string,
-        loan_amount: string,
-        document: File | null,
-    }>,
-    family_members: [] as Array<{
-        relation: string,
-        member_id: string,
-        current_deposit: string,
-        current_loan: string,
-        signeture: File | null,
-    }>,
+    grantors: [],
+    family_members: [],
 });
 
+// Grantor management
 const editingGrantorIndex = ref<number | null>(null);
-// Temporary state for new grantor input
-const newGrantor = reactive({
+const newGrantor = reactive<Grantor>({
     member_id: '',
     deposit_amount: '',
     loan_amount: '',
-    document: null as File | null,
+    // document: null,
 });
 
 function addGrantor() {
@@ -138,18 +180,14 @@ function addGrantor() {
     } else {
         form.grantors.push(grantorData);
     }
-    // Reset fields
-    newGrantor.member_id = '';
-    newGrantor.deposit_amount = '';
-    newGrantor.loan_amount = '';
-    newGrantor.document = null;
+    clearGrantor();
 }
 
 function clearGrantor() {
     newGrantor.member_id = '';
     newGrantor.deposit_amount = '';
     newGrantor.loan_amount = '';
-    newGrantor.document = null;
+    // newGrantor.document = null;
 }
 
 function editGrantor(index: number) {
@@ -157,8 +195,6 @@ function editGrantor(index: number) {
     newGrantor.member_id = grantor.member_id;
     newGrantor.deposit_amount = grantor.deposit_amount;
     newGrantor.loan_amount = grantor.loan_amount;
-    newGrantor.document = grantor.document;
-
     editingGrantorIndex.value = index;
 }
 
@@ -167,16 +203,16 @@ function removeGrantor(index: number) {
     editingGrantorIndex.value = null;
 }
 
-// Family member section
+// Family member management
 const editingFamilyMemberIndex = ref<number | null>(null);
-const newFamilyMember = reactive({
-    name: '',
+const newFamilyMember = reactive<FamilyMember>({
+    // name: '',
     relation: '',
     member_id: '',
     contact_no: '',
     current_deposit: '',
     current_loan: '',
-    signeture: null as File | null,
+    // signeture: null,
 });
 
 function addFamilyMember() {
@@ -188,25 +224,17 @@ function addFamilyMember() {
     } else {
         form.family_members.push(familyMemberData);
     }
-
-    // Reset fields
-    newFamilyMember.name = '';
-    newFamilyMember.relation = '';
-    newFamilyMember.member_id = '';
-    newFamilyMember.contact_no = '';
-    newFamilyMember.current_deposit = '';
-    newFamilyMember.current_loan = '';
-    newFamilyMember.signeture = null;
+    clearFamilyMember();
 }
 
 function clearFamilyMember() {
-    newFamilyMember.name = '';
+    // newFamilyMember.name = '';
     newFamilyMember.relation = '';
     newFamilyMember.member_id = '';
     newFamilyMember.contact_no = '';
     newFamilyMember.current_deposit = '';
     newFamilyMember.current_loan = '';
-    newFamilyMember.signeture = null;
+    // newFamilyMember.signeture = null;
 }
 
 function editFamilyMember(index: number) {
@@ -215,8 +243,6 @@ function editFamilyMember(index: number) {
     newFamilyMember.member_id = member.member_id;
     newFamilyMember.current_deposit = member.current_deposit;
     newFamilyMember.current_loan = member.current_loan;
-    newFamilyMember.signeture = member.signeture;
-
     editingFamilyMemberIndex.value = index;
 }
 
@@ -225,25 +251,142 @@ function removeFamilyMember(index: number) {
     editingFamilyMemberIndex.value = null;
 }
 
-function handleDocumentUpload(e: Event, isNewMember = true) {
-    const target = e.target as HTMLInputElement;
-    if (target && target.files) {
-        if (isNewMember) {
-            newFamilyMember.signeture = target.files[0];
-        } else {
-            // For editing existing members
-            const index = editingFamilyMemberIndex.value;
-            if (index !== null) {
-                form.family_members[index].signeture = target.files[0];
-            }
-        }
+// Step navigation
+function prevStep() {
+    if (currentStep.value > 0) {
+        currentStep.value--;
     }
 }
 
-const handleSubmit = () => {
-    form.post(`/members/${props.member.id}/sell-product`);
+function nextStep() {
+    form.clearErrors();
+    showConfirmationError.value = false;
+
+    // Step validation
+    switch (currentStep.value) {
+        case 0:
+            if (!form.product_id) {
+                form.setError('product_id', 'Please select a product');
+                return;
+            }
+            break;
+
+        case 1:
+            type IncomeField = keyof Pick<FormFields,
+                'office_address' | 'office_contact' | 'self_income' | 'rent' | 'food_expense'
+            >;
+
+            const incomeFields: Record<IncomeField, string> = {
+                office_address: 'Please enter your office address',
+                office_contact: 'Please enter your office contact',
+                self_income: 'Please enter your self income',
+                rent: 'Please enter your rent',
+                food_expense: 'Please enter your food expense'
+            };
+
+            let hasError = false;
+            (Object.entries(incomeFields) as Array<[IncomeField, string]>).forEach(([field, message]) => {
+                if (!form[field]) {
+                    form.setError(field, message);
+                    hasError = true;
+                }
+            });
+
+            if (hasError) return;
+            break;
+
+        case 2:
+            type LoanField = keyof Pick<FormFields,
+                'loan_amount' | 'loan_type' | 'loan_purpose' | 'total_installment' |
+                'start_date' | 'loan_surety_type'
+            >;
+
+            const loanFields: Record<LoanField, string> = {
+                loan_amount: 'Please enter the loan amount',
+                loan_type: 'Please select a loan type',
+                loan_purpose: 'Please enter the loan purpose',
+                total_installment: 'Please enter the total installment',
+                start_date: 'Please select the first installment start date',
+                loan_surety_type: 'Please select the loan surety type',
+            };
+
+            let hasLoanError = false;
+
+            // Validate required fields
+            (Object.entries(loanFields) as Array<[LoanField, string]>).forEach(([field, message]) => {
+                if (!form[field]) {
+                    form.setError(field, message);
+                    hasLoanError = true;
+                }
+            });
+
+            // Validate loan amount
+            if (form.loan_amount) {
+                const loanAmount = parseFloat(form.loan_amount);
+                if (isNaN(loanAmount) || loanAmount <= 0) {
+                    form.setError('loan_amount', 'Please enter a valid positive loan amount');
+                    hasLoanError = true;
+                }
+
+                // Validate against max loan amount
+                if (form.max_loan_amount) {
+                    const maxAmount = parseFloat(form.max_loan_amount);
+                    if (!isNaN(maxAmount) && loanAmount > maxAmount) {
+                        form.setError('loan_amount', `Loan amount cannot exceed ${maxAmount.toLocaleString()}`);
+                        hasLoanError = true;
+                    }
+                }
+            }
+
+            if (hasLoanError) return;
+            break;
+
+        case 3:
+            if (!form.family_member) {
+                form.setError('family_member', 'Please add number of family member');
+                return;
+            }
+            break;
+    }
+
+    if (currentStep.value < steps.length - 1) {
+        currentStep.value++;
+    } else {
+        handleSubmit();
+    }
+}
+
+// Form submission
+const handleSubmit = async () => {
+    if (!isConfirmed.value) {
+        showConfirmationError.value = true;
+        return;
+    }
+
+    showConfirmationError.value = false;
+
+    try {
+        await form.post(`/members/${props.member.id}/sell-product`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                window.location.href = `/members/${props.member.id}`;
+            },
+            onError: (errors) => {
+                if (errors.product_id) {
+                    currentStep.value = 0;
+                }
+                if (errors.loan_amount) {
+                    currentStep.value = 2;
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        form.setError('loan_amount', 'An error occurred during submission. Please try again.');
+    }
 };
 
+// Watchers
 watch(
     () => form.product_id,
     (newProductId) => {
@@ -265,7 +408,6 @@ watch(
 watch(
     [() => form.self_income, () => form.family_income],
     ([self, family]) => {
-        // Convert to numbers, default to 0 if empty or invalid
         const selfVal = parseFloat(self) || 0;
         const familyVal = parseFloat(family) || 0;
         form.total_income = (selfVal + familyVal).toFixed(2);
@@ -289,13 +431,64 @@ watch(
         form.total_expense = (rentVal + foodVal + educationVal + transportVal + otherVal).toFixed(2);
     }
 );
+
+function closeModal() {
+    form.clearErrors('application');
+}
 </script>
 
 <template>
 
-    <Head title="Sell Product" />
+    <Head title="Sell Product">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+    </Head>
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="m-20">
+            <!-- Error Modal: Only show if there is an application error -->
+<div
+    v-if="form.errors.application"
+    class="fixed z-10 inset-0 overflow-y-auto"
+    id="my-modal"
+>
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+            role="dialog" aria-modal="true" aria-labelledby="modal-headline">
+            <div>
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                    <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </div>
+                <div class="mt-3 text-center sm:mt-5">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline">
+                        Error
+                    </h3>
+                    <div class="mb-4">
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                            {{ form.errors.application }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-5 sm:mt-6">
+                <button
+                    class="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm"
+                    type="button"
+                    @click="closeModal"
+                >
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
             <form @submit.prevent="handleSubmit" class="flex flex-col gap-6">
                 <!-- Progress Indicator -->
                 <div class="flex flex-col md:flex-row justify-between items-center mb-8 space-y-4 md:space-y-0">
@@ -319,7 +512,8 @@ watch(
                     <div class="flex gap-6">
                         <div class="flex-1">
                             <Label for="product_id">Select Product</Label>
-                            <select id="product_id" v-model="form.product_id" class="w-full border rounded p-2">
+                            <select id="product_id" v-model="form.product_id" class="w-full border rounded p-2"
+                                required>
                                 <option value="" disabled>Select a product</option>
                                 <option v-for="product in props.products" :key="product.id" :value="product.id">
                                     {{ product.name }}
@@ -342,7 +536,7 @@ watch(
                     <div class="flex gap-6">
                         <div class="flex-1">
                             <Label for="interest_rate">Interest Rate</Label>
-                            <Input id="interest_rate" v-model="form.interest_rate" type="number" />
+                            <Input id="interest_rate" v-model="form.interest_rate" type="number" step="0.01" />
                             <InputError :message="form.errors.interest_rate" />
                         </div>
                         <div class="flex-1">
@@ -455,7 +649,7 @@ watch(
                                             Amount</h3>
                                     </div>
                                     <p class="text-gray-600 dark:text-gray-300">
-                                        This is the short description of your feature.
+                                        {{ loan_info.current_share_amount ?? '0' }} BDT
                                     </p>
                                 </div>
                             </div>
@@ -471,7 +665,7 @@ watch(
                                             Share Amount</h3>
                                     </div>
                                     <p class="text-gray-600 dark:text-gray-300">
-                                        This is the short description of your feature.
+                                        {{ loan_info.share_b4_3m ?? '0' }} BDT
                                     </p>
                                 </div>
                             </div>
@@ -487,7 +681,7 @@ watch(
                                         </h3>
                                     </div>
                                     <p class="text-gray-600 dark:text-gray-300">
-                                        This is the short description of your feature.
+                                        {{ loan_info.previous_loan ?? '0' }} BDT
                                     </p>
                                 </div>
                             </div>
@@ -607,6 +801,9 @@ watch(
                                             <i class="pl-2">Grantor</i>
                                         </Label>
                                     </div>
+                                    <p v-if="form.errors.loan_surety_type" class="text-red-500 text-sm mt-1">
+                                        {{ form.errors.loan_surety_type }}
+                                    </p>
                                 </div>
                             </div>
                             <div v-if="form.loan_surety_type === 'grantor'" class="mt-8 space-y-6">
@@ -631,7 +828,7 @@ watch(
                                             <Input id="grantor_loan_amount" v-model="newGrantor.loan_amount"
                                                 placeholder="Enter amount" />
                                         </div>
-                                        <div>
+                                        <!-- <div>
                                             <Label for="grantor_signeture">Grantor Signature</Label>
                                             <input id="grantor_signeture" type="file" accept="image/*,application/pdf"
                                                 @change="e => {
@@ -639,7 +836,7 @@ watch(
                                                     if (target && target.files) newGrantor.document = target.files[0];
                                                 }"
                                                 class="block w-full text-sm text-gray-700 border border-gray-300 rounded-md shadow-sm p-2 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-                                        </div>
+                                        </div> -->
                                     </div>
 
                                     <div class="flex justify-end gap-2">
@@ -660,7 +857,7 @@ watch(
                                                         <th class="px-4 py-3 text-center">Member ID</th>
                                                         <th class="px-4 py-3 text-center">Deposit Amount</th>
                                                         <th class="px-4 py-3 text-center">Loan Amount</th>
-                                                        <th class="px-4 py-3 text-center">Document</th>
+                                                        <!-- <th class="px-4 py-3 text-center">Document</th> -->
                                                         <th class="px-4 py-3 text-center">Action</th>
                                                     </tr>
                                                 </thead>
@@ -670,13 +867,13 @@ watch(
                                                         <td class="px-4 py-2 text-center">{{ g.member_id }}</td>
                                                         <td class="px-4 py-2 text-center">{{ g.deposit_amount }}</td>
                                                         <td class="px-4 py-2 text-center">{{ g.loan_amount }}</td>
-                                                        <td class="px-4 py-2 text-center">
+                                                        <!-- <td class="px-4 py-2 text-center">
                                                             <span v-if="g.document"
                                                                 class="text-blue-600 underline cursor-pointer">
                                                                 {{ g.document.name }}
                                                             </span>
                                                             <span v-else class="text-gray-400">-</span>
-                                                        </td>
+                                                        </td> -->
                                                         <td class="px-4 py-2 flex justify-center gap-2">
                                                             <Button type="button" variant="secondary" size="sm"
                                                                 @click="editGrantor(idx)">
@@ -698,9 +895,9 @@ watch(
                             <div v-if="form.loan_surety_type === 'self_deposit'"
                                 class="flex gap-6 mt-4 bg-gray-100 p-4 rounded-md">
                                 <div class="flex-1">
-                                    <Label for="self_deposit_amout">Self Diposit Amount (NPCSS)</Label>
-                                    <Input id="self_deposit_amout" v-model="form.self_deposit_amout" />
-                                    <InputError :message="form.errors.self_deposit_amout" />
+                                    <Label for="self_deposit_amount">Self Diposit Amount (NPCSS)</Label>
+                                    <Input id="self_deposit_amount" v-model="form.self_deposit_amount" />
+                                    <InputError :message="form.errors.self_deposit_amount" />
                                 </div>
                             </div>
                         </div>
@@ -716,6 +913,7 @@ watch(
                             <Label for="family_member">Number of Family Members</Label>
                             <Input id="family_member" v-model="form.family_member"
                                 placeholder="Number of Family Members" />
+                            <InputError :message="form.errors.family_member" />
                         </div>
                     </div>
 
@@ -743,7 +941,7 @@ watch(
                                 <Input id="family_member_loan" v-model="newFamilyMember.current_loan" type="number"
                                     step="0.01" placeholder="Enter amount" />
                             </div>
-                            <div>
+                            <!-- <div>
                                 <Label for="family_member_document">Document (Photo or PDF)</Label>
                                 <input id="family_member_document" type="file" accept="image/*,application/pdf"
                                     @change="handleDocumentUpload($event, true)"
@@ -753,7 +951,7 @@ watch(
                                 <div v-if="newFamilyMember.signeture" class="mt-2 text-sm text-blue-600">
                                     Selected: {{ newFamilyMember.signeture.name }}
                                 </div>
-                            </div>
+                            </div> -->
                         </div>
 
                         <div class="flex justify-end gap-2">
@@ -776,7 +974,7 @@ watch(
                                             <th class="px-4 py-3 text-center">Member ID</th>
                                             <th class="px-4 py-3 text-center">Deposit</th>
                                             <th class="px-4 py-3 text-center">Loan</th>
-                                            <th class="px-4 py-3 text-center">Document</th>
+                                            <!-- <th class="px-4 py-3 text-center">Document</th> -->
                                             <th class="px-4 py-3 text-center">Action</th>
                                         </tr>
                                     </thead>
@@ -787,13 +985,13 @@ watch(
                                             <td class="px-4 py-2 text-center">{{ member.member_id || '-' }}</td>
                                             <td class="px-4 py-2 text-center">{{ member.current_deposit }}</td>
                                             <td class="px-4 py-2 text-center">{{ member.current_loan || '-' }}</td>
-                                            <td class="px-4 py-2 text-center">
+                                            <!-- <td class="px-4 py-2 text-center">
                                                 <span v-if="member.signeture"
                                                     class="text-blue-600 underline cursor-pointer">
                                                     {{ member.signeture.name }}
                                                 </span>
                                                 <span v-else class="text-gray-400">-</span>
-                                            </td>
+                                            </td> -->
                                             <td class="px-4 py-2 flex justify-center gap-2">
                                                 <Button type="button" variant="secondary" size="sm"
                                                     @click="editFamilyMember(idx)">
@@ -819,67 +1017,92 @@ watch(
                     <div class="flex flex-col gap-6 mt-10">
 
                         <!-- Product Information Card -->
-                      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-    <!-- Card Header -->
-    <div class="flex items-center mb-6 pb-4 border-b border-gray-100">
-        <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-50 mr-3">
-            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-            </svg>
-        </div>
-        <div>
-            <h4 class="font-semibold text-lg text-gray-800">Product Information</h4>
-            <p class="text-sm text-gray-500">Loan product details</p>
-        </div>
-    </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <!-- Card Header -->
+                            <div class="flex items-center mb-6 pb-4 border-b border-gray-100">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-50 mr-3">
+                                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-lg text-gray-800">Product Information</h4>
+                                    <p class="text-sm text-gray-500">Loan product details</p>
+                                </div>
+                            </div>
 
-    <!-- Product Selection -->
-    <div class="bg-gray-50 p-4 rounded-lg mb-6">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-            <h5 class="text-sm font-medium text-gray-600 uppercase tracking-wider">Selected Product</h5>
-            <span class="px-3 py-1 text-xs font-medium rounded-full" 
-                  :class="form.product_id ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'">
-                {{ form.product_id ? 'Selected' : 'Not selected' }}
-            </span>
-        </div>
-        <div class="bg-white p-4 rounded-md border border-gray-200 shadow-xs">
-            <p class="text-gray-800 font-medium text-center text-lg">
-                {{form.product_id && props.products ? (props.products.find(p => p.id === Number(form.product_id))?.name) || 'Product not found' : 'No product selected'}}
-            </p>
-        </div>
-    </div>
+                            <!-- Product Selection -->
+                            <div class="bg-white p-6 rounded-xl shadow-sm ring-1 ring-gray-200 mb-8">
+                                <!-- Header Section -->
+                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
+                                    <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                                        Selected Product
+                                    </h2>
+                                    <span
+                                        class="px-3 py-1 text-xs font-medium rounded-full transition-colors duration-200"
+                                        :class="form.product_id ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'">
+                                        {{ form.product_id ? 'Selected' : 'Not selected' }}
+                                    </span>
+                                </div>
 
-    <!-- Key Features -->
-    <div class="space-y-4">
-        <h5 class="text-sm font-medium text-gray-600 uppercase tracking-wider">Loan Terms</h5>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-xs transition-shadow">
-                <div class="text-center">
-                    <p class="text-xs text-gray-500 mb-1">Minimum Amount</p>
-                    <p class="text-lg font-semibold text-blue-600">{{ form.min_balance || '0' }} BDT</p>
-                </div>
-            </div>
-            <div class="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-xs transition-shadow">
-                <div class="text-center">
-                    <p class="text-xs text-gray-500 mb-1">Maximum Amount</p>
-                    <p class="text-lg font-semibold text-blue-600">{{ form.max_loan_amount || '0' }} BDT</p>
-                </div>
-            </div>
-            <div class="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-xs transition-shadow">
-                <div class="text-center">
-                    <p class="text-xs text-gray-500 mb-1">Interest Rate</p>
-                    <p class="text-lg font-semibold text-purple-600">{{ form.interest_rate || '0' }}%</p>
-                </div>
-            </div>
-            <div class="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-xs transition-shadow">
-                <div class="text-center">
-                    <p class="text-xs text-gray-500 mb-1">Loan Term</p>
-                    <p class="text-lg font-semibold text-gray-800">{{ form.loan_term_months || '0' }} months</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                                <!-- Product Name Box -->
+                                <div
+                                    class="bg-gray-50 p-5 rounded-lg border border-dashed border-gray-300 text-center mb-6">
+                                    <p class="text-lg font-medium text-gray-800">
+                                        {{form.product_id && props.products ? (props.products.find(p => p.id ===
+                                            Number(form.product_id))?.name) || 'Product not found'
+                                            : 'No product selected'}}
+                                    </p>
+                                </div>
+
+                                <!-- Key Features Section -->
+                                <div class="space-y-5">
+                                    <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                                        Loan Terms
+                                    </h2>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                                        <!-- Minimum Amount -->
+                                        <div
+                                            class="bg-blue-50 border border-gray-200 rounded-lg p-4 text-center hover:shadow-md transition-shadow duration-200">
+                                            <p class="text-xs text-gray-500 mb-1">
+                                                Minimum Amount
+                                            </p>
+                                            <p class="text-lg font-bold text-blue-600">
+                                                {{ form.min_balance || '0' }} BDT
+                                            </p>
+                                        </div>
+
+                                        <!-- Maximum Amount -->
+                                        <div
+                                            class="bg-blue-50 border border-gray-200 rounded-lg p-4 text-center hover:shadow-md transition-shadow duration-200">
+                                            <p class="text-xs text-gray-500 mb-1">Maximum Amount</p>
+                                            <p class="text-lg font-bold text-blue-600">{{ form.max_loan_amount || '0' }}
+                                                BDT</p>
+                                        </div>
+
+                                        <!-- Interest Rate -->
+                                        <div
+                                            class="bg-blue-50 border border-gray-200 rounded-lg p-4 text-center hover:shadow-md transition-shadow duration-200">
+                                            <p class="text-xs text-gray-500 mb-1">Interest Rate</p>
+                                            <p class="text-lg font-bold text-purple-600">{{ form.interest_rate || '0'
+                                            }}%</p>
+                                        </div>
+
+                                        <!-- Loan Term -->
+                                        <div
+                                            class="bg-blue-50 border border-gray-200 rounded-lg p-4 text-center hover:shadow-md transition-shadow duration-200">
+                                            <p class="text-xs text-gray-500 mb-1">Loan Term</p>
+                                            <p class="text-lg font-bold text-gray-800">{{ form.loan_term_months || '0'
+                                            }} months</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
 
                         <!-- Income & Expense -->
                         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mt-6">
@@ -898,47 +1121,54 @@ watch(
                                 </div>
                             </div>
 
-                            <!-- Professional Information - Full Width -->
+                            <!-- Professional Information -->
                             <div class="mb-6">
-                                <div class="bg-indigo-50 p-4 rounded-lg">
-                                    <h5 class="text-sm font-medium text-blue-600 mb-3 uppercase tracking-wider">
-                                        Professional Information
-                                    </h5>
-                                    
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div
-                                            class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
-                                            <span class="text-gray-600">Office Address</span>
-                                            <span class="text-gray-800 font-medium text-right">{{
-                                                form.office_address || 'Not provided' }}</span>
+                                <div
+                                    class="bg-gray-50 from-indigo-50 via-white to-white p-6 rounded-xl border border-indigo-100 shadow-sm">
+                                    <!-- Section Header -->
+                                    <div class="flex items-center mb-5">
+                                        <h5 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                                            Professional Information
+                                        </h5>
+                                    </div>
+
+                                    <!-- Info Cards -->
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        <!-- Office Address -->
+                                        <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                            <p class="text-xs text-gray-500 mb-1">Office Address</p>
+                                            <p class="text-gray-800 font-medium">
+                                                {{ form.office_address || 'Not provided' }}
+                                            </p>
                                         </div>
-                                        <div
-                                            class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
-                                            <span class="text-gray-600">Occupation</span>
-                                            <span class="text-gray-800 font-medium">{{ form.occupation || 'N/A'
-                                                }}</span>
+
+                                        <!-- Occupation -->
+                                        <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                            <p class="text-xs text-gray-500 mb-1">Occupation</p>
+                                            <p class="text-gray-800 font-medium">{{ form.occupation || 'N/A' }}</p>
                                         </div>
-                                        <div
-                                            class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
-                                            <span class="text-gray-600">Designation</span>
-                                            <span class="text-gray-800 font-medium">{{ form.designation || 'N/A'
-                                                }}</span>
+
+                                        <!-- Designation -->
+                                        <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                            <p class="text-xs text-gray-500 mb-1">Designation</p>
+                                            <p class="text-gray-800 font-medium">{{ form.designation || 'N/A' }}</p>
                                         </div>
-                                        <div
-                                            class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
-                                            <span class="text-gray-600">Office Contact</span>
-                                            <span class="text-gray-800 font-medium">{{ form.office_contact || 'N/A'
-                                                }}</span>
+
+                                        <!-- Office Contact -->
+                                        <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                            <p class="text-xs text-gray-500 mb-1">Office Contact</p>
+                                            <p class="text-gray-800 font-medium">{{ form.office_contact || 'N/A' }}</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
+
                             <!-- Financial Details - Two Columns -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <!-- Income Section -->
-                                <div class="bg-blue-50 p-4 rounded-lg">
-                                    <h5 class="text-sm font-medium text-blue-600 mb-3 uppercase tracking-wider">
+                                <div class="bg-blue-50 p-4 rounded-lg hover:shadow-md transition-shadow duration-200">
+                                    <h5 class="text-sm font-medium text-green-600 mb-3 uppercase tracking-wider">
                                         Income
                                     </h5>
                                     <div class="space-y-3">
@@ -964,7 +1194,7 @@ watch(
                                 </div>
 
                                 <!-- Expense Section -->
-                                <div class="bg-red-50 p-4 rounded-lg">
+                                <div class="bg-blue-50 p-4 rounded-lg hover:shadow-md transition-shadow duration-200">
                                     <h5 class="text-sm font-medium text-red-600 mb-3 uppercase tracking-wider">
                                         Expenses
                                     </h5>
@@ -1009,232 +1239,272 @@ watch(
                             </div>
                         </div>
 
-                    </div>
-
-                    <!-- Loan Details Card -->
-                    <!-- Loan Information Card - Professional Version -->
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mt-6">
-                        <!-- Card Header -->
-                        <div class="flex items-center mb-6 pb-4 border-b border-gray-100">
-                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 mr-3">
-                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
-                                    </path>
-                                </svg>
+                        <!-- Loan Details Card -->
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mt-6">
+                            <!-- Card Header -->
+                            <div class="flex items-center mb-6 pb-4 border-b border-gray-100">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 mr-3">
+                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-lg text-gray-800">Loan Information</h4>
+                                    <p class="text-sm text-gray-500">Application details</p>
+                                </div>
                             </div>
-                            <div>
-                                <h4 class="font-semibold text-lg text-gray-800">Loan Information</h4>
-                                <p class="text-sm text-gray-500">Application details</p>
+
+                            <!-- Content Grid -->
+                            <div class="space-y-6">
+                                <!-- Applied Loan Section -->
+                                <div class="bg-blue-50 p-4 rounded-lg hover:shadow-md transition-shadow duration-200">
+                                    <h5 class="text-sm font-medium text-blue-600 mb-3 uppercase tracking-wider">Applied
+                                        Loan
+                                    </h5>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div
+                                            class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                                            <span class="text-gray-600">Loan Amount</span>
+                                            <span class="text-blue-700 font-medium">
+                                                {{ form.loan_amount || '0' }} BDT
+                                            </span>
+                                        </div>
+                                        <div
+                                            class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                                            <span class="text-gray-600">Loan Purpose</span>
+                                            <span class="text-gray-800 font-medium">
+                                                {{ form.loan_purpose || 'Not specified' }}
+                                            </span>
+                                        </div>
+                                        <div
+                                            class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                                            <span class="text-gray-600">Loan Type</span>
+                                            <span class="font-medium" :class="{
+                                                'text-blue-600': form.loan_type === 'General',
+                                                'text-orange-600': form.loan_type === 'Urgent',
+                                                'text-purple-600': form.loan_type === 'TopUp',
+                                                'text-gray-600': form.loan_type === 'Others'
+                                            }">
+                                                {{ form.loan_type || 'Not specified' }}
+                                                <span v-if="form.loan_type === 'Urgent'"
+                                                    class="ml-2 text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                                                    +{{ form.urgent_fee || '0' }} BDT fee
+                                                </span>
+                                            </span>
+                                        </div>
+                                        <div
+                                            class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                                            <span class="text-gray-600">Total Installments</span>
+                                            <span class="text-gray-800 font-medium">{{ form.total_installment || '0'
+                                            }}</span>
+                                        </div>
+                                        <div
+                                            class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                                            <span class="text-gray-600">Start Date</span>
+                                            <span class="text-gray-800 font-medium">{{ form.start_date || 'Not set'
+                                            }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Other Loans Section -->
+                                <div class="bg-gray-50 p-4 rounded-lg ">
+                                    <h5 class="text-sm font-medium text-gray-600 mb-3 uppercase tracking-wider">
+                                        Other Loan Informatio
+                                    </h5>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div
+                                            class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                                            <span class="text-gray-600">Loan Amount</span>
+                                            <span class="text-blue-700 font-medium">{{ form.other_loan_amount || '0' }}
+                                                BDT</span>
+                                        </div>
+                                        <div
+                                            class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                                            <span class="text-gray-600">Installment</span>
+                                            <span class="text-gray-800 font-medium">{{ form.other_loan_installment ||
+                                                '0' }}
+                                            </span>
+                                        </div>
+                                        <div
+                                            class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                                            <span class="text-gray-600">Remaining</span>
+                                            <span class="text-gray-800 font-medium">{{ form.other_loan_remaining || '0'
+                                            }}
+                                                BDT</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Collateral Section -->
+                                <div class="bg-gray-50 p-6 rounded-lg">
+                                    <h5 class="text-sm font-semibold text-blue-700 uppercase tracking-wide">
+                                        Loan Collateral
+                                    </h5>
+
+                                    <!-- Self Deposit -->
+                                    <div v-if="form.loan_surety_type === 'self_deposit'"
+                                        class="bg-white p-4 rounded-md border border-blue-100">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-gray-700">Self Deposit Amount</span>
+                                            <span class="text-purple-700 font-semibold">
+                                                {{ form.self_deposit_amount || '0' }} BDT
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Grantors Section -->
+                                    <div v-if="form.loan_surety_type === 'grantor' && form.grantors.length"
+                                        class="mt-5">
+                                        <h6 class="text-xs font-medium text-gray-500 uppercase mb-2 tracking-wider">
+                                            Grantors ({{ form.grantors.length }})
+                                        </h6>
+
+                                        <div class="space-y-3">
+                                            <div v-for="(grantor, index) in form.grantors" :key="index"
+                                                class="bg-white p-4 rounded-md border border-gray-200 ">
+                                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                    <div>
+                                                        <p class="text-xs text-gray-500 mb-1">Member ID</p>
+                                                        <p class="text-sm font-medium text-gray-800">{{
+                                                            grantor.member_id || '-' }}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-xs text-gray-500 mb-1">Deposit Amount</p>
+                                                        <p class="text-sm font-semibold text-blue-700">{{
+                                                            grantor.deposit_amount || '0' }} BDT</p>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-xs text-gray-500 mb-1">Loan Amount</p>
+                                                        <p class="text-sm font-semibold text-purple-700">{{
+                                                            grantor.loan_amount || '0' }} BDT</p>
+                                                    </div>
+                                                </div>
+                                                <!-- <div v-if="grantor.document" class="mt-3">
+                                                    <p class="text-xs text-gray-500 mb-1">Document</p>
+                                                    <a href="#" class="text-sm text-blue-600 underline">{{
+                                                        grantor.document.name }}</a>
+                                                </div> -->
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- No Collateral Selected -->
+                                    <div v-if="!form.loan_surety_type"
+                                        class="mt-4 bg-gray-50 p-4 rounded-md border border-gray-200 text-center">
+                                        <p class="text-sm text-gray-500">No collateral method selected</p>
+                                    </div>
+                                </div>
+
+
                             </div>
                         </div>
 
-                        <!-- Content Grid -->
-                        <div class="space-y-6">
-                            <!-- Applied Loan Section -->
-                            <div class="bg-blue-50 p-4 rounded-lg">
-                                <h5 class="text-sm font-medium text-blue-600 mb-3 uppercase tracking-wider">Applied Loan
-                                </h5>
+                        <!-- Family Information Card - Professional Version -->
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mt-6">
+                            <!-- Card Header -->
+                            <div class="flex items-center mb-6 pb-4 border-b border-gray-100">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-50 mr-3">
+                                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-lg text-gray-800">Family Information</h4>
+                                    <p class="text-sm text-gray-500">NPCSS member family details</p>
+                                </div>
+                            </div>
+
+                            <!-- Family Summary -->
+                            <div class="flex justify-between items-center bg-gray-50 px-4 py-3 rounded-lg mb-6">
+                                <span class="text-gray-700 font-medium">Total Family Members</span>
+                                <span class="text-lg font-semibold text-indigo-600">{{ form.family_member || '0'
+                                }}</span>
+                            </div>
+
+                            <!-- Family Members Section -->
+                            <div v-if="form.family_members.length">
+                                <h5 class="text-sm font-medium text-gray-600 mb-3 uppercase tracking-wider">NPCSS Member
+                                    Family ({{ form.family_members.length }})</h5>
+
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div
-                                        class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
-                                        <span class="text-gray-600">Loan Amount</span>
-                                        <span class="text-blue-700 font-medium">{{ form.loan_amount || '0' }} BDT</span>
-                                    </div>
-                                    <div
-                                        class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
-                                        <span class="text-gray-600">Loan Purpose</span>
-                                        <span class="text-gray-800 font-medium">{{ form.loan_purpose || 'Not specified'
-                                            }}</span>
-                                    </div>
-                                    <div
-                                        class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
-                                        <span class="text-gray-600">Loan Type</span>
-                                        <span class="font-medium" :class="{
-                                            'text-blue-600': form.loan_type === 'General',
-                                            'text-orange-600': form.loan_type === 'Urgent',
-                                            'text-purple-600': form.loan_type === 'TopUp',
-                                            'text-gray-600': form.loan_type === 'Others'
-                                        }">
-                                            {{ form.loan_type || 'Not specified' }}
-                                            <span v-if="form.loan_type === 'Urgent'"
-                                                class="ml-2 text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
-                                                +{{ form.urgent_fee || '0' }} BDT fee
-                                            </span>
-                                        </span>
-                                    </div>
-                                    <div
-                                        class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
-                                        <span class="text-gray-600">Total Installments</span>
-                                        <span class="text-gray-800 font-medium">{{ form.total_installment || '0'
-                                            }}</span>
-                                    </div>
-                                    <div
-                                        class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
-                                        <span class="text-gray-600">Start Date</span>
-                                        <span class="text-gray-800 font-medium">{{ form.start_date || 'Not set'
-                                            }}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Other Loans Section -->
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <h5 class="text-sm font-medium text-gray-600 mb-3 uppercase tracking-wider">Other Loan
-                                    Information</h5>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div
-                                        class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
-                                        <span class="text-gray-600">Loan Amount</span>
-                                        <span class="text-blue-700 font-medium">{{ form.other_loan_amount || '0' }}
-                                            BDT</span>
-                                    </div>
-                                    <div
-                                        class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
-                                        <span class="text-gray-600">Installment</span>
-                                        <span class="text-gray-800 font-medium">{{ form.other_loan_installment || '0' }}
-                                        </span>
-                                    </div>
-                                    <div
-                                        class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
-                                        <span class="text-gray-600">Remaining</span>
-                                        <span class="text-gray-800 font-medium">{{ form.other_loan_remaining || '0' }}
-                                            BDT</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Collateral Section -->
-                            <div class="bg-purple-50 p-4 rounded-lg">
-                                <h5 class="text-sm font-medium text-purple-600 mb-3 uppercase tracking-wider">Loan
-                                    Collateral</h5>
-
-                                <div v-if="form.loan_surety_type === 'self_deposit'"
-                                    class="bg-white p-3 rounded-md border border-gray-200">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-gray-600">Self Deposit Amount</span>
-                                        <span class="text-purple-700 font-medium">{{ form.self_deposit_amout || '0' }}
-                                            BDT</span>
-                                    </div>
-                                </div>
-
-                                <div v-if="form.loan_surety_type === 'grantor' && form.grantors.length" class="mt-3">
-                                    <h6 class="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wider">Grantors
-                                        ({{ form.grantors.length }})</h6>
-                                    <div class="space-y-2">
-                                        <div v-for="(grantor, index) in form.grantors" :key="index"
-                                            class="bg-white p-3 rounded-md border border-gray-200">
-                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                                <div>
-                                                    <p class="text-xs text-gray-500">Member ID</p>
-                                                    <p class="font-medium">{{ grantor.member_id || '-' }}</p>
-                                                </div>
-                                                <div>
-                                                    <p class="text-xs text-gray-500">Deposit Amount</p>
-                                                    <p class="font-medium text-blue-600">{{ grantor.deposit_amount ||
-                                                        '0' }} BDT</p>
-                                                </div>
-                                                <div>
-                                                    <p class="text-xs text-gray-500">Loan Amount</p>
-                                                    <p class="font-medium text-purple-600">{{ grantor.loan_amount || '0'
-                                                        }} BDT</p>
-                                                </div>
-                                            </div>
-                                            <div v-if="grantor.document" class="mt-2">
-                                                <p class="text-xs text-gray-500">Document</p>
-                                                <p class="text-sm text-blue-600 underline">{{ grantor.document.name }}
+                                    <div v-for="(member, index) in form.family_members" :key="index"
+                                        class="bg-blue-50 p-4 rounded-lg border border-gray-200 shadow-xs hover:shadow-md transition-shadow">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <div>
+                                                <h6 class="font-medium text-gray-800 capitalize">{{ member.relation }}
+                                                </h6>
+                                                <p class="text-xs text-gray-500">
+                                                    Member ID: {{ member.member_id || 'Not provided' }}
                                                 </p>
                                             </div>
+                                            <!-- <span v-if="member.signeture"
+                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                Document
+                                            </span> -->
                                         </div>
+
+                                        <div class="grid grid-cols-2 gap-3 mt-3">
+                                            <div>
+                                                <p class="text-xs text-gray-500">Current Deposit</p>
+                                                <p class="text-sm font-medium text-green-600">{{ member.current_deposit
+                                                    ||
+                                                    '0' }} BDT</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-500">Current Loan</p>
+                                                <p class="text-sm font-medium text-red-600">{{ member.current_loan ||
+                                                    '0' }}
+                                                    BDT</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- <div v-if="member.signeture" class="mt-3 pt-3 border-t border-gray-100">
+                                            <p class="text-xs text-gray-500 mb-1">Attached Document</p>
+                                            <p class="text-sm text-blue-600 truncate">{{ member.signeture.name }}</p>
+                                        </div> -->
                                     </div>
                                 </div>
+                            </div>
 
-                                <div v-if="!form.loan_surety_type"
-                                    class="bg-white p-3 rounded-md border border-gray-200 text-center">
-                                    <p class="text-gray-500">No collateral method selected</p>
-                                </div>
+                            <!-- Empty State -->
+                            <div v-else class="bg-gray-50 p-6 rounded-lg text-center">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z">
+                                    </path>
+                                </svg>
+                                <h5 class="mt-2 text-sm font-medium text-gray-700">No family members added</h5>
+                                <p class="mt-1 text-sm text-gray-500">Add NPCSS member family details if applicable</p>
                             </div>
                         </div>
                     </div>
-                    <!-- Family Information Card - Professional Version -->
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mt-6">
-                        <!-- Card Header -->
-                        <div class="flex items-center mb-6 pb-4 border-b border-gray-100">
-                            <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-50 mr-3">
-                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                                    </path>
-                                </svg>
-                            </div>
-                            <div>
-                                <h4 class="font-semibold text-lg text-gray-800">Family Information</h4>
-                                <p class="text-sm text-gray-500">NPCSS member family details</p>
-                            </div>
+
+
+
+                    <!-- Confirmation Checkbox -->
+                    <div v-show="currentStep === 4" class="mt-6 space-y-4">
+                        <div class="flex items-center">
+                            <input id="confirmation-checkbox" type="checkbox" v-model="isConfirmed"
+                                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="confirmation-checkbox" class="ml-2 block text-sm text-gray-700">
+                                I confirm that all the information provided is accurate and complete.
+                            </label>
                         </div>
-
-                        <!-- Family Summary -->
-                        <div class="flex justify-between items-center bg-gray-50 px-4 py-3 rounded-lg mb-6">
-                            <span class="text-gray-700 font-medium">Total Family Members</span>
-                            <span class="text-lg font-semibold text-indigo-600">{{ form.family_member || '0' }}</span>
-                        </div>
-
-                        <!-- Family Members Section -->
-                        <div v-if="form.family_members.length">
-                            <h5 class="text-sm font-medium text-gray-600 mb-3 uppercase tracking-wider">NPCSS Member
-                                Family ({{ form.family_members.length }})</h5>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div v-for="(member, index) in form.family_members" :key="index"
-                                    class="bg-white p-4 rounded-lg border border-gray-200 shadow-xs hover:shadow-sm transition-shadow">
-                                    <div class="flex items-start justify-between mb-2">
-                                        <div>
-                                            <h6 class="font-medium text-gray-800 capitalize">{{ member.relation }}</h6>
-                                            <p class="text-xs text-gray-500">Member ID: {{ member.member_id || 'Not provided' }}</p>
-                                        </div>
-                                        <span v-if="member.signeture"
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            Document
-                                        </span>
-                                    </div>
-
-                                    <div class="grid grid-cols-2 gap-3 mt-3">
-                                        <div>
-                                            <p class="text-xs text-gray-500">Current Deposit</p>
-                                            <p class="text-sm font-medium text-green-600">{{ member.current_deposit ||
-                                                '0' }} BDT</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-xs text-gray-500">Current Loan</p>
-                                            <p class="text-sm font-medium text-red-600">{{ member.current_loan || '0' }}
-                                                BDT</p>
-                                        </div>
-                                    </div>
-
-                                    <div v-if="member.signeture" class="mt-3 pt-3 border-t border-gray-100">
-                                        <p class="text-xs text-gray-500 mb-1">Attached Document</p>
-                                        <p class="text-sm text-blue-600 truncate">{{ member.signeture.name }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Empty State -->
-                        <div v-else class="bg-gray-50 p-6 rounded-lg text-center">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                    d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z">
-                                </path>
-                            </svg>
-                            <h5 class="mt-2 text-sm font-medium text-gray-700">No family members added</h5>
-                            <p class="mt-1 text-sm text-gray-500">Add NPCSS member family details if applicable</p>
-                        </div>
+                        <p v-if="showConfirmationError" class="text-sm text-red-600">
+                            Please confirm the information before submitting.
+                        </p>
                     </div>
 
                 </div>
+
                 <div class="flex justify-between mt-6">
                     <!-- Previous Button - shown on all steps except first -->
                     <Button v-if="currentStep > 0" type="button" variant="outline" @click="prevStep"
@@ -1249,10 +1519,10 @@ watch(
                     </Button>
 
                     <!-- Submit Button - only on last step -->
-                    <Button v-else type="submit" :disabled="form.processing"
-                        :class="{ 'opacity-70 cursor-not-allowed': form.processing }">
+                    <Button v-else type="submit" :disabled="form.processing || !isConfirmed"
+                        :class="{ 'opacity-70 cursor-not-allowed': form.processing || !isConfirmed, 'bg-green-600 hover:bg-green-700': isConfirmed && !form.processing }">
                         <span v-if="form.processing">Processing...</span>
-                        <span v-else>Submit</span>
+                        <span v-else>Submit Application</span>
                     </Button>
                 </div>
             </form>
