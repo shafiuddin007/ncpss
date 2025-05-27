@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Js;
+use App\Enums\Status;
 
 class LoanController extends Controller
 {
@@ -126,7 +127,7 @@ class LoanController extends Controller
                 'loan_collateral_type' => $validated['loan_surety_type'],
                 'self_deposite_amount' => $validated['self_deposit_amount'] ?? null,
                 'family_member' => $validated['family_member'],
-                'status' => 'pending',
+                'status' => Status::PENDING->value, 
                 'is_active' => true,
                 'is_delete' => false,
             ]);

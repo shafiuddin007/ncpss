@@ -9,13 +9,9 @@ import { Label } from '@/components/ui/label';
 import Dropdown from '@/components/ui/Dropdown.vue';
 import ActiveCheckbox from '@/components/ui/checkbox/ActiveCheckbox.vue';
 
-// Dropdown options
-const productTypes = [
-    { value: 'Savings', label: 'Savings' },
-    { value: 'Loan', label: 'Loan' },
-    { value: 'Credit card', label: 'Credit Card' },
-    { value: 'Investment', label: 'Investment' },
-];
+const props = defineProps<{
+    productTypes: { value: string; label: string }[];
+}>();
 
 // Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
@@ -74,7 +70,7 @@ const handleSubmit = () => {
                             <Dropdown
                                 id="type"
                                 label="Product Type"
-                                :options="productTypes"
+                                :options="props.productTypes"
                                 v-model="form.type"
                                 placeholder="Select Product Type"
                                 :error="form.errors.type"

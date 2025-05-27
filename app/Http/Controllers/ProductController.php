@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Js;
 use Inertia\Inertia;
 use Illuminate\Http\JsonResponse;
+use App\Enums\ProductType;
 
 class ProductController extends Controller
 {
@@ -27,7 +28,16 @@ class ProductController extends Controller
      */
     public function create()
     {
-        return Inertia::render('product/create');
+        $productTypes = collect(ProductType::cases())
+            ->map(fn($case) => [
+                'value' => $case->value,
+                'label' => ucwords(str_replace('_', ' ', $case->name)),
+            ])
+            ->values();
+
+        return Inertia::render('product/create', [
+            'productTypes' => $productTypes,
+        ]);
     }
 
     /**
@@ -59,8 +69,16 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
+        $productTypes = collect(ProductType::cases())
+            ->map(fn($case) => [
+                'value' => $case->value,
+                'label' => ucwords(str_replace('_', ' ', $case->name)),
+            ])
+            ->values();
+
         return Inertia::render('product/edit', [
             'product' => $product,
+            'productTypes' => $productTypes,
         ]);
     }
 

@@ -9,40 +9,16 @@ import { Label } from '@/components/ui/label';
 import Dropdown from '@/components/ui/Dropdown.vue';
 import ActiveCheckbox from '@/components/ui/checkbox/ActiveCheckbox.vue';
 
-// Props
-const props = defineProps({
-    product: {
-        type: Object as () => {
-            id: number;
-            name: string;
-            type: string;
-            description: string;
-            interest_rate: number;
-            min_balance: number;
-            max_loan_amount: number;
-            loan_term_months: number;
-            currency: string;
-            is_active: boolean;
-        },
-        required: true,
-    },
-});
+const props = defineProps<{
+    product: any,
+    productTypes: { value: string; label: string }[];
+}>();
 
-// Dropdown options
-const productTypes = [
-    { value: 'Savings', label: 'Savings' },
-    { value: 'Loan', label: 'Loan' },
-    { value: 'Credit card', label: 'Credit Card' },
-    { value: 'Investment', label: 'Investment' },
-];
-
-// Breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Products', href: '/products' },
     { title: 'Edit Product', href: '' },
 ];
 
-// Form setup
 const form = useForm({
     name: props.product.name,
     type: props.product.type || '',
@@ -55,14 +31,10 @@ const form = useForm({
     is_active: props.product.is_active ?? false,
 });
 
-// Handle submit
 const handleSubmit = () => {
-    console.log('Submitting:', form.data());
-    form.is_active = !!form.is_active; // force boolean
+    form.is_active = !!form.is_active;
     form.put(`/products/${props.product.id}`);
 };
-
-
 </script>
 
 <template>
@@ -84,7 +56,7 @@ const handleSubmit = () => {
 
                         <!-- Dropdown Field -->
                         <div class="flex-1">
-                            <Dropdown id="type" label="Product Type" :options="productTypes" v-model="form.type"
+                            <Dropdown id="type" label="Product Type" :options="props.productTypes" v-model="form.type"
                                 placeholder="Select Product Type" :error="form.errors.type" />
                         </div>
                     </div>

@@ -80,10 +80,10 @@ const form = useForm({
     dob: '',
     place_of_birth: '',
     gender: '',
-    nationality: 'Bangladesh', // Default value for nationality
+    nationality: props.countries.find(c => c.name === 'Bangladesh')?.id || '', // Set Bangladesh as default
     nid: '',
 
-    religion: '',
+    religion: 'Christian', // Set Christian as default value
     blood_group: '',
     marital_status: '',
 
@@ -206,6 +206,31 @@ const submit = () => {
         },
     });
 };
+
+const sameAsPresent = ref(false);
+
+watch(sameAsPresent, (checked) => {
+    if (checked) {
+        form.per_address = form.pre_address;
+        form.per_division = form.pre_division;
+        form.per_district = form.pre_district;
+        form.per_thana = form.pre_thana;
+        form.per_post_code = form.pre_post_code;
+    }
+});
+
+watch(
+    () => [form.pre_address, form.pre_division, form.pre_district, form.pre_thana, form.pre_post_code],
+    ([pre_address, pre_division, pre_district, pre_thana, pre_post_code]) => {
+        if (sameAsPresent.value) {
+            form.per_address = pre_address;
+            form.per_division = pre_division;
+            form.per_district = pre_district;
+            form.per_thana = pre_thana;
+            form.per_post_code = pre_post_code;
+        }
+    }
+);
 </script>
 
 <template>
@@ -393,11 +418,22 @@ const submit = () => {
                     </div>
                 </div>
 
+                <!-- Before Permanent Address -->
+                <div class="flex items-center mb-2">
+                    <input
+                        id="same_as_present"
+                        type="checkbox"
+                        v-model="sameAsPresent"
+                        class="mr-2"
+                    />
+                    <Label for="same_as_present">Same as Present address</Label>
+                </div>
+
                 <div class="grid gap-6">
                     <div class="grid gap-2">
                         <Label for="per_address">Permanent Address</Label>
                         <Input id="per_address" type="text" required autofocus :tabindex="21" autocomplete="per_address"
-                            v-model="form.per_address" placeholder="Address" />
+                            v-model="form.per_address" placeholder="Address" :disabled="sameAsPresent" />
                         <InputError :message="form.errors.per_address" />
                     </div>
                 </div>

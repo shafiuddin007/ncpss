@@ -46,7 +46,7 @@ class MemberController extends Controller
             'email' => 'nullable|email|max:255',
             'dob' => 'required',
             'place_of_birth' => 'nullable|string|max:255',
-            'gender' => 'required|string|in:male,female,others',
+            'gender' => 'required|string|in:Male,Female,Others',
             'religion' => 'required|string|max:255',
             'blood_group' => 'string|max:5',
             'marital_status' => 'required|string',

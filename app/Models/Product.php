@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Enums\ProductType; // Import the enum
 
 class Product extends Model
 {
@@ -21,5 +22,9 @@ class Product extends Model
         'loan_term_months',
         'currency',
         'is_active',
+    ];
+
+    protected $casts = [
+        'type' => ProductType::class, // Cast 'type' as enum
     ];
 }
