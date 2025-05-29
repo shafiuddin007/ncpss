@@ -11,105 +11,105 @@ import ErrorAlertModal from '@/components/ErrorAlertModal.vue';
 
 // Types
 type Product = {
-    id: number;
-    name: string;
-    min_balance?: string | number;
-    max_loan_amount?: string | number;
-    interest_rate?: string | number;
-    loan_term_months?: string | number;
+  id: number;
+  name: string;
+  min_balance?: string | number;
+  max_loan_amount?: string | number;
+  interest_rate?: string | number;
+  loan_term_months?: string | number;
 };
 
 type LoanInfo = {
-    current_share_amount?: string | number;
-    share_b4_3m?: string | number;
-    previous_loan?: string | number;
+  current_share_amount?: string | number;
+  share_b4_3m?: string | number;
+  previous_loan?: string | number;
 };
 
 type Grantor = {
-    member_id: string;
-    deposit_amount: string;
-    loan_amount: string;
-    // document: File | null;
+  member_id: string;
+  deposit_amount: string;
+  loan_amount: string;
+  // document: File | null;
 };
 
 type FamilyMember = {
-    // name: string;
-    relation: string;
-    member_id: string;
-    contact_no: string;
-    current_deposit: string;
-    current_loan: string;
-    // signeture: File | null;
+  // name: string;
+  relation: string;
+  member_id: string;
+  contact_no: string;
+  current_deposit: string;
+  current_loan: string;
+  // signeture: File | null;
 };
 
 type FormFields = {
-    code_number: string;
-    loan_number: string;
-    member_id: any;
-    product_id: string;
-    interest_rate: string;
-    min_balance: string;
-    max_loan_amount: string;
-    loan_term_months: string;
-    office_address: string;
-    occupation: string;
-    designation: string;
-    office_contact: string;
-    self_income: string;
-    family_income: string;
-    total_income: string;
-    rent: string;
-    food_expense: string;
-    education_expense: string;
-    transport_expense: string;
-    other_expense: string;
-    total_expense: string;
-    current_share_amount: string;
-    before_share_amount: string;
-    loan_amount: string;
-    loan_type: string;
-    loan_purpose: string;
-    previous_loans: string;
-    total_installment: string;
-    first_installment: string;
-    other_loan_amount: string;
-    other_loan_installment: string;
-    other_loan_remaining: string;
-    loan_surety_id: string;
-    surety_name: string;
-    self_deposit_amount: string;
-    start_date: string;
-    status: string;
-    is_urgent: boolean;
-    urgent_fee: number;
-    loan_surety_type: string;
-    family_member: string;
-    grantors: Grantor[];
-    family_members: FamilyMember[];
-    application?: string; // Add this line to allow application-level errors
+  code_number: string;
+  loan_number: string;
+  member_id: any;
+  product_id: string;
+  interest_rate: string;
+  min_balance: string;
+  max_loan_amount: string;
+  loan_term_months: string;
+  office_address: string;
+  occupation: string;
+  designation: string;
+  office_contact: string;
+  self_income: string;
+  family_income: string;
+  total_income: string;
+  rent: string;
+  food_expense: string;
+  education_expense: string;
+  transport_expense: string;
+  other_expense: string;
+  total_expense: string;
+  current_share_amount: string;
+  before_share_amount: string;
+  loan_amount: string;
+  loan_type: string;
+  loan_purpose: string;
+  previous_loans: string;
+  total_installment: string;
+  first_installment: string;
+  other_loan_amount: string;
+  other_loan_installment: string;
+  other_loan_remaining: string;
+  loan_surety_id: string;
+  surety_name: string;
+  self_deposit_amount: string;
+  start_date: string;
+  status: string;
+  is_urgent: boolean;
+  urgent_fee: number;
+  loan_surety_type: string;
+  family_member: string;
+  grantors: Grantor[];
+  family_members: FamilyMember[];
+  application?: string; // Add this line to allow application-level errors
 };
 
 const props = defineProps<{
-    member: any;
-    products: Product[];
-    loan_info: LoanInfo;
+  member: any;
+  products: Product[];
+  loan_info: LoanInfo;
 }>();
 
 
 
 // Define breadcrumbs
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: `${props.member.name}`, href: `/members/${props.member.id}` },
-    { title: `Sell Product`, href: '' },
+  { title: `${props.member.name}`, href: `/members/${props.member.id}` },
+  { title: `Sell Product`, href: '' },
 ];
 
 // Steps configuration
 const steps = [
-    { title: 'Product Information', href: '#product-info' },
-    { title: 'Income & Expense', href: '#income-expence' },
-    { title: 'Loan Information', href: '#loan-info' },
-    { title: 'Family Member', href: '#family-member' },
-    { title: 'Submit', href: '#submit' },
+  { title: 'Product Information', href: '#product-info' },
+  { title: 'Income & Expense', href: '#income-expence' },
+  { title: 'Loan Information', href: '#loan-info' },
+  { title: 'Family Member', href: '#family-member' },
+  { title: 'Submit', href: '#submit' },
 ];
 
 const currentStep = ref(0);
@@ -118,323 +118,323 @@ const showConfirmationError = ref(false);
 
 // Form initialization
 const form = useForm<FormFields>({
-    code_number: '',
-    loan_number: '',
-    member_id: props.member.id,
-    product_id: '',
-    interest_rate: '',
-    min_balance: '',
-    max_loan_amount: '',
-    loan_term_months: '',
-    office_address: '',
-    occupation: '',
-    designation: '',
-    office_contact: '',
-    self_income: '',
-    family_income: '',
-    total_income: '',
-    rent: '',
-    food_expense: '',
-    education_expense: '',
-    transport_expense: '',
-    other_expense: '',
-    total_expense: '',
-    current_share_amount: '',
-    before_share_amount: '',
-    loan_amount: '',
-    loan_type: '',
-    loan_purpose: '',
-    previous_loans: '',
-    total_installment: '',
-    first_installment: '',
-    other_loan_amount: '',
-    other_loan_installment: '',
-    other_loan_remaining: '',
-    loan_surety_id: '',
-    surety_name: '',
-    self_deposit_amount: '',
-    start_date: '',
-    status: 'active',
-    is_urgent: false,
-    urgent_fee: 1000,
-    loan_surety_type: '',
-    family_member: '',
-    grantors: [],
-    family_members: [],
+  code_number: '',
+  loan_number: '',
+  member_id: props.member.id,
+  product_id: '',
+  interest_rate: '',
+  min_balance: '',
+  max_loan_amount: '',
+  loan_term_months: '',
+  office_address: '',
+  occupation: '',
+  designation: '',
+  office_contact: '',
+  self_income: '',
+  family_income: '',
+  total_income: '',
+  rent: '',
+  food_expense: '',
+  education_expense: '',
+  transport_expense: '',
+  other_expense: '',
+  total_expense: '',
+  current_share_amount: '',
+  before_share_amount: '',
+  loan_amount: '',
+  loan_type: '',
+  loan_purpose: '',
+  previous_loans: '',
+  total_installment: '',
+  first_installment: '',
+  other_loan_amount: '',
+  other_loan_installment: '',
+  other_loan_remaining: '',
+  loan_surety_id: '',
+  surety_name: '',
+  self_deposit_amount: '',
+  start_date: '',
+  status: 'active',
+  is_urgent: false,
+  urgent_fee: 1000,
+  loan_surety_type: '',
+  family_member: '',
+  grantors: [],
+  family_members: [],
 });
 
 // Grantor management
 const editingGrantorIndex = ref<number | null>(null);
 const newGrantor = reactive<Grantor>({
-    member_id: '',
-    deposit_amount: '',
-    loan_amount: '',
-    // document: null,
+  member_id: '',
+  deposit_amount: '',
+  loan_amount: '',
+  // document: null,
 });
 
 function addGrantor() {
-    const grantorData = { ...newGrantor };
+  const grantorData = { ...newGrantor };
 
-    if (editingGrantorIndex.value !== null) {
-        form.grantors[editingGrantorIndex.value] = grantorData;
-        editingGrantorIndex.value = null;
-    } else {
-        form.grantors.push(grantorData);
-    }
-    clearGrantor();
+  if (editingGrantorIndex.value !== null) {
+    form.grantors[editingGrantorIndex.value] = grantorData;
+    editingGrantorIndex.value = null;
+  } else {
+    form.grantors.push(grantorData);
+  }
+  clearGrantor();
 }
 
 function clearGrantor() {
-    newGrantor.member_id = '';
-    newGrantor.deposit_amount = '';
-    newGrantor.loan_amount = '';
-    // newGrantor.document = null;
+  newGrantor.member_id = '';
+  newGrantor.deposit_amount = '';
+  newGrantor.loan_amount = '';
+  // newGrantor.document = null;
 }
 
 function editGrantor(index: number) {
-    const grantor = form.grantors[index];
-    newGrantor.member_id = grantor.member_id;
-    newGrantor.deposit_amount = grantor.deposit_amount;
-    newGrantor.loan_amount = grantor.loan_amount;
-    editingGrantorIndex.value = index;
+  const grantor = form.grantors[index];
+  newGrantor.member_id = grantor.member_id;
+  newGrantor.deposit_amount = grantor.deposit_amount;
+  newGrantor.loan_amount = grantor.loan_amount;
+  editingGrantorIndex.value = index;
 }
 
 function removeGrantor(index: number) {
-    form.grantors.splice(index, 1);
-    editingGrantorIndex.value = null;
+  form.grantors.splice(index, 1);
+  editingGrantorIndex.value = null;
 }
 
 // Family member management
 const editingFamilyMemberIndex = ref<number | null>(null);
 const newFamilyMember = reactive<FamilyMember>({
-    // name: '',
-    relation: '',
-    member_id: '',
-    contact_no: '',
-    current_deposit: '',
-    current_loan: '',
-    // signeture: null,
+  // name: '',
+  relation: '',
+  member_id: '',
+  contact_no: '',
+  current_deposit: '',
+  current_loan: '',
+  // signeture: null,
 });
 
 function addFamilyMember() {
-    const familyMemberData = { ...newFamilyMember };
+  const familyMemberData = { ...newFamilyMember };
 
-    if (editingFamilyMemberIndex.value !== null) {
-        form.family_members[editingFamilyMemberIndex.value] = familyMemberData;
-        editingFamilyMemberIndex.value = null;
-    } else {
-        form.family_members.push(familyMemberData);
-    }
-    clearFamilyMember();
+  if (editingFamilyMemberIndex.value !== null) {
+    form.family_members[editingFamilyMemberIndex.value] = familyMemberData;
+    editingFamilyMemberIndex.value = null;
+  } else {
+    form.family_members.push(familyMemberData);
+  }
+  clearFamilyMember();
 }
 
 function clearFamilyMember() {
-    // newFamilyMember.name = '';
-    newFamilyMember.relation = '';
-    newFamilyMember.member_id = '';
-    newFamilyMember.contact_no = '';
-    newFamilyMember.current_deposit = '';
-    newFamilyMember.current_loan = '';
-    // newFamilyMember.signeture = null;
+  // newFamilyMember.name = '';
+  newFamilyMember.relation = '';
+  newFamilyMember.member_id = '';
+  newFamilyMember.contact_no = '';
+  newFamilyMember.current_deposit = '';
+  newFamilyMember.current_loan = '';
+  // newFamilyMember.signeture = null;
 }
 
 function editFamilyMember(index: number) {
-    const member = form.family_members[index];
-    newFamilyMember.relation = member.relation;
-    newFamilyMember.member_id = member.member_id;
-    newFamilyMember.current_deposit = member.current_deposit;
-    newFamilyMember.current_loan = member.current_loan;
-    editingFamilyMemberIndex.value = index;
+  const member = form.family_members[index];
+  newFamilyMember.relation = member.relation;
+  newFamilyMember.member_id = member.member_id;
+  newFamilyMember.current_deposit = member.current_deposit;
+  newFamilyMember.current_loan = member.current_loan;
+  editingFamilyMemberIndex.value = index;
 }
 
 function removeFamilyMember(index: number) {
-    form.family_members.splice(index, 1);
-    editingFamilyMemberIndex.value = null;
+  form.family_members.splice(index, 1);
+  editingFamilyMemberIndex.value = null;
 }
 
 // Step navigation
 function prevStep() {
-    if (currentStep.value > 0) {
-        currentStep.value--;
-    }
+  if (currentStep.value > 0) {
+    currentStep.value--;
+  }
 }
 
 function nextStep() {
-    form.clearErrors();
-    showConfirmationError.value = false;
+  form.clearErrors();
+  showConfirmationError.value = false;
 
-    // Step validation
-    switch (currentStep.value) {
-        case 0:
-            if (!form.product_id) {
-                form.setError('product_id', 'Please select a product');
-                return;
-            }
-            break;
+  // Step validation
+  switch (currentStep.value) {
+    case 0:
+      if (!form.product_id) {
+        form.setError('product_id', 'Please select a product');
+        return;
+      }
+      break;
 
-        case 1:
-            type IncomeField = keyof Pick<FormFields,
-                'office_address' | 'office_contact' | 'self_income' | 'rent' | 'food_expense'
-            >;
+    case 1:
+      type IncomeField = keyof Pick<FormFields,
+        'office_address' | 'office_contact' | 'self_income' | 'rent' | 'food_expense'
+      >;
 
-            const incomeFields: Record<IncomeField, string> = {
-                office_address: 'Please enter your office address',
-                office_contact: 'Please enter your office contact',
-                self_income: 'Please enter your self income',
-                rent: 'Please enter your rent',
-                food_expense: 'Please enter your food expense'
-            };
+      const incomeFields: Record<IncomeField, string> = {
+        office_address: 'Please enter your office address',
+        office_contact: 'Please enter your office contact',
+        self_income: 'Please enter your self income',
+        rent: 'Please enter your rent',
+        food_expense: 'Please enter your food expense'
+      };
 
-            let hasError = false;
-            (Object.entries(incomeFields) as Array<[IncomeField, string]>).forEach(([field, message]) => {
-                if (!form[field]) {
-                    form.setError(field, message);
-                    hasError = true;
-                }
-            });
+      let hasError = false;
+      (Object.entries(incomeFields) as Array<[IncomeField, string]>).forEach(([field, message]) => {
+        if (!form[field]) {
+          form.setError(field, message);
+          hasError = true;
+        }
+      });
 
-            if (hasError) return;
-            break;
+      if (hasError) return;
+      break;
 
-        case 2:
-            type LoanField = keyof Pick<FormFields,
-                'loan_amount' | 'loan_type' | 'loan_purpose' | 'total_installment' |
-                'start_date' | 'loan_surety_type'
-            >;
+    case 2:
+      type LoanField = keyof Pick<FormFields,
+        'loan_amount' | 'loan_type' | 'loan_purpose' | 'total_installment' |
+        'start_date' | 'loan_surety_type'
+      >;
 
-            const loanFields: Record<LoanField, string> = {
-                loan_amount: 'Please enter the loan amount',
-                loan_type: 'Please select a loan type',
-                loan_purpose: 'Please enter the loan purpose',
-                total_installment: 'Please enter the total installment',
-                start_date: 'Please select the first installment start date',
-                loan_surety_type: 'Please select the loan surety type',
-            };
+      const loanFields: Record<LoanField, string> = {
+        loan_amount: 'Please enter the loan amount',
+        loan_type: 'Please select a loan type',
+        loan_purpose: 'Please enter the loan purpose',
+        total_installment: 'Please enter the total installment',
+        start_date: 'Please select the first installment start date',
+        loan_surety_type: 'Please select the loan surety type',
+      };
 
-            let hasLoanError = false;
+      let hasLoanError = false;
 
-            // Validate required fields
-            (Object.entries(loanFields) as Array<[LoanField, string]>).forEach(([field, message]) => {
-                if (!form[field]) {
-                    form.setError(field, message);
-                    hasLoanError = true;
-                }
-            });
+      // Validate required fields
+      (Object.entries(loanFields) as Array<[LoanField, string]>).forEach(([field, message]) => {
+        if (!form[field]) {
+          form.setError(field, message);
+          hasLoanError = true;
+        }
+      });
 
-            // Validate loan amount
-            if (form.loan_amount) {
-                const loanAmount = parseFloat(form.loan_amount);
-                if (isNaN(loanAmount) || loanAmount <= 0) {
-                    form.setError('loan_amount', 'Please enter a valid positive loan amount');
-                    hasLoanError = true;
-                }
+      // Validate loan amount
+      if (form.loan_amount) {
+        const loanAmount = parseFloat(form.loan_amount);
+        if (isNaN(loanAmount) || loanAmount <= 0) {
+          form.setError('loan_amount', 'Please enter a valid positive loan amount');
+          hasLoanError = true;
+        }
 
-                // Validate against max loan amount
-                if (form.max_loan_amount) {
-                    const maxAmount = parseFloat(form.max_loan_amount);
-                    if (!isNaN(maxAmount) && loanAmount > maxAmount) {
-                        form.setError('loan_amount', `Loan amount cannot exceed ${maxAmount.toLocaleString()}`);
-                        hasLoanError = true;
-                    }
-                }
-            }
+        // Validate against max loan amount
+        if (form.max_loan_amount) {
+          const maxAmount = parseFloat(form.max_loan_amount);
+          if (!isNaN(maxAmount) && loanAmount > maxAmount) {
+            form.setError('loan_amount', `Loan amount cannot exceed ${maxAmount.toLocaleString()}`);
+            hasLoanError = true;
+          }
+        }
+      }
 
-            if (hasLoanError) return;
-            break;
+      if (hasLoanError) return;
+      break;
 
-        case 3:
-            if (!form.family_member) {
-                form.setError('family_member', 'Please add number of family member');
-                return;
-            }
-            break;
-    }
+    case 3:
+      if (!form.family_member) {
+        form.setError('family_member', 'Please add number of family member');
+        return;
+      }
+      break;
+  }
 
-    if (currentStep.value < steps.length - 1) {
-        currentStep.value++;
-    } else {
-        handleSubmit();
-    }
+  if (currentStep.value < steps.length - 1) {
+    currentStep.value++;
+  } else {
+    handleSubmit();
+  }
 }
 
 // Form submission
 const handleSubmit = async () => {
-    if (!isConfirmed.value) {
-        showConfirmationError.value = true;
-        return;
-    }
+  if (!isConfirmed.value) {
+    showConfirmationError.value = true;
+    return;
+  }
 
-    showConfirmationError.value = false;
+  showConfirmationError.value = false;
 
-    try {
-        await form.post(`/members/${props.member.id}/sell-product`, {
-            preserveScroll: true,
-            onSuccess: () => {
-                window.location.href = `/members/${props.member.id}`;
-            },
-            onError: (errors) => {
-                if (errors.product_id) {
-                    currentStep.value = 0;
-                }
-                if (errors.loan_amount) {
-                    currentStep.value = 2;
-                }
-            }
-        });
-    } catch (error) {
-        console.error('Error:', error);
-        form.setError('loan_amount', 'An error occurred during submission. Please try again.');
-    }
+  try {
+    await form.post(`/members/${props.member.id}/sell-product`, {
+      preserveScroll: true,
+      onSuccess: () => {
+        window.location.href = `/applications`;
+      },
+      onError: (errors) => {
+        if (errors.product_id) {
+          currentStep.value = 0;
+        }
+        if (errors.loan_amount) {
+          currentStep.value = 2;
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    form.setError('application', 'An unexpected error occurred. Please try again.');
+  }
 };
 
 // Watchers
 watch(
-    () => form.product_id,
-    (newProductId) => {
-        const selected = props.products.find(p => p.id === Number(newProductId));
-        if (selected) {
-            form.min_balance = selected.min_balance !== null ? String(selected.min_balance) : '0';
-            form.max_loan_amount = selected.max_loan_amount !== null ? String(selected.max_loan_amount) : '0';
-            form.interest_rate = selected.interest_rate !== null ? String(selected.interest_rate) : '0';
-            form.loan_term_months = selected.loan_term_months !== null ? String(selected.loan_term_months) : '0';
-        } else {
-            form.min_balance = '';
-            form.max_loan_amount = '';
-            form.interest_rate = '';
-            form.loan_term_months = '';
-        }
+  () => form.product_id,
+  (newProductId) => {
+    const selected = props.products.find(p => p.id === Number(newProductId));
+    if (selected) {
+      form.min_balance = selected.min_balance !== null ? String(selected.min_balance) : '0';
+      form.max_loan_amount = selected.max_loan_amount !== null ? String(selected.max_loan_amount) : '0';
+      form.interest_rate = selected.interest_rate !== null ? String(selected.interest_rate) : '0';
+      form.loan_term_months = selected.loan_term_months !== null ? String(selected.loan_term_months) : '0';
+    } else {
+      form.min_balance = '';
+      form.max_loan_amount = '';
+      form.interest_rate = '';
+      form.loan_term_months = '';
     }
+  }
 );
 
 watch(
-    [() => form.self_income, () => form.family_income],
-    ([self, family]) => {
-        const selfVal = parseFloat(self) || 0;
-        const familyVal = parseFloat(family) || 0;
-        form.total_income = (selfVal + familyVal).toFixed(2);
-    }
+  [() => form.self_income, () => form.family_income],
+  ([self, family]) => {
+    const selfVal = parseFloat(self) || 0;
+    const familyVal = parseFloat(family) || 0;
+    form.total_income = (selfVal + familyVal).toFixed(2);
+  }
 );
 
 watch(
-    [
-        () => form.rent,
-        () => form.food_expense,
-        () => form.education_expense,
-        () => form.transport_expense,
-        () => form.other_expense,
-    ],
-    ([rent, food, education, transport, other]) => {
-        const rentVal = parseFloat(rent) || 0;
-        const foodVal = parseFloat(food) || 0;
-        const educationVal = parseFloat(education) || 0;
-        const transportVal = parseFloat(transport) || 0;
-        const otherVal = parseFloat(other) || 0;
-        form.total_expense = (rentVal + foodVal + educationVal + transportVal + otherVal).toFixed(2);
-    }
+  [
+    () => form.rent,
+    () => form.food_expense,
+    () => form.education_expense,
+    () => form.transport_expense,
+    () => form.other_expense,
+  ],
+  ([rent, food, education, transport, other]) => {
+    const rentVal = parseFloat(rent) || 0;
+    const foodVal = parseFloat(food) || 0;
+    const educationVal = parseFloat(education) || 0;
+    const transportVal = parseFloat(transport) || 0;
+    const otherVal = parseFloat(other) || 0;
+    form.total_expense = (rentVal + foodVal + educationVal + transportVal + otherVal).toFixed(2);
+  }
 );
 
 function closeModal() {
-    form.clearErrors('application');
+  form.clearErrors('application');
 }
 </script>
 
@@ -442,48 +442,32 @@ function closeModal() {
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="m-20">
       <!-- Error Modal -->
-      <ErrorAlertModal
-        :show="!!form.errors.application"
-        :message="form.errors.application"
-        @close="closeModal"
-      />
+      <ErrorAlertModal :show="!!form.errors.application" :message="form.errors.application" @close="closeModal" />
 
       <form @submit.prevent="handleSubmit" class="flex flex-col gap-6">
         <!-- Progress Indicator -->
         <div class="flex flex-col md:flex-row justify-between items-center mb-8 space-y-4 md:space-y-0">
           <div v-for="(step, index) in steps" :key="index" class="flex items-center">
-            <div
-              :id="step.href.substring(1)"
+            <div :id="step.href.substring(1)"
               class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full"
-              :class="currentStep === index ? 'bg-[#106C4F] text-white' : 'bg-gray-200 text-gray-600'"
-            >
+              :class="currentStep === index ? 'bg-[#106C4F] text-white' : 'bg-gray-200 text-gray-600'">
               {{ index + 1 }}
             </div>
-            <div
-              class="ml-4 text-sm md:text-base font-semibold"
-              :class="currentStep === index ? 'text-[#106C44F]' : 'text-gray-600'"
-            >
+            <div class="ml-4 text-sm md:text-base font-semibold"
+              :class="currentStep === index ? 'text-[#106C44F]' : 'text-gray-600'">
               {{ step.title }}
             </div>
           </div>
         </div>
 
         <!-- Step 1: Product Information -->
-        <div
-          v-show="currentStep === 0"
-          id="product-info"
-          class="step-content grid gap-6 shadow-md p-6 border rounded-lg bg-gray-100"
-        >
+        <div v-show="currentStep === 0" id="product-info"
+          class="step-content grid gap-6 shadow-md p-6 border rounded-lg bg-gray-100">
           <h2 class="text-2xl font-semibold text-center">Product Information</h2>
           <div class="flex gap-6">
             <div class="flex-1">
               <Label for="product_id">Select Product</Label>
-              <select
-                id="product_id"
-                v-model="form.product_id"
-                class="w-full border rounded p-2"
-                required
-              >
+              <select id="product_id" v-model="form.product_id" class="w-full border rounded p-2" required>
                 <option value="" disabled>Select a product</option>
                 <option v-for="product in props.products" :key="product.id" :value="product.id">
                   {{ product.name }}
@@ -518,11 +502,8 @@ function closeModal() {
         </div>
 
         <!-- Step 2: Income & Expense -->
-        <div
-          v-show="currentStep === 1"
-          id="income-expence"
-          class="step-content grid gap-6 shadow-md p-6 border rounded-lg bg-gray-100"
-        >
+        <div v-show="currentStep === 1" id="income-expence"
+          class="step-content grid gap-6 shadow-md p-6 border rounded-lg bg-gray-100">
           <h2 class="text-2xl font-semibold text-center">Income & Expence Information</h2>
           <h2 class="text-lg font-semibold">Job Information</h2>
           <div class="flex gap-6">
@@ -607,22 +588,17 @@ function closeModal() {
         </div>
 
         <!-- Step 3: Loan Information -->
-        <div
-          v-show="currentStep === 2"
-          id="loan-info"
-          class="step-content grid gap-6 shadow-md p-6 border rounded-lg bg-gray-100"
-        >
+        <div v-show="currentStep === 2" id="loan-info"
+          class="step-content grid gap-6 shadow-md p-6 border rounded-lg bg-gray-100">
           <h2 class="text-2xl font-semibold text-center">Loan Information</h2>
 
           <div class="grid gap-6 mt-10">
             <div class="flex gap-6">
               <div class="relative cursor-pointer dark:text-white flex-1 ">
                 <span
-                  class="absolute top-0 left-0 w-full h-full mt-1 ml-1 bg-indigo-500 rounded-lg dark:bg-gray-200"
-                ></span>
+                  class="absolute top-0 left-0 w-full h-full mt-1 ml-1 bg-indigo-500 rounded-lg dark:bg-gray-200"></span>
                 <div
-                  class="relative p-6 bg-teal-100 dark:bg-gray-800 border-2 border-indigo-500 dark:border-gray-300 rounded-lg hover:scale-105 transition duration-500"
-                >
+                  class="relative p-6 bg-teal-100 dark:bg-gray-800 border-2 border-indigo-500 dark:border-gray-300 rounded-lg hover:scale-105 transition duration-500">
                   <div class="flex items-center">
                     <h3 class="my-2 ml-3 text-lg font-bold text-gray-800 dark:text-white">Current
                       Share
@@ -636,11 +612,9 @@ function closeModal() {
 
               <div class="relative cursor-pointer dark:text-white flex-1">
                 <span
-                  class="absolute top-0 left-0 w-full h-full mt-1 ml-1 bg-indigo-500 rounded-lg dark:bg-gray-200"
-                ></span>
+                  class="absolute top-0 left-0 w-full h-full mt-1 ml-1 bg-indigo-500 rounded-lg dark:bg-gray-200"></span>
                 <div
-                  class="relative p-6 bg-green-100 dark:bg-gray-800 border-2 border-indigo-500 dark:border-gray-300 rounded-lg hover:scale-105 transition duration-500"
-                >
+                  class="relative p-6 bg-green-100 dark:bg-gray-800 border-2 border-indigo-500 dark:border-gray-300 rounded-lg hover:scale-105 transition duration-500">
                   <div class="flex items-center">
                     <h3 class="my-2 ml-3 text-lg font-bold text-gray-800 dark:text-white">3 Month
                       Before
@@ -654,11 +628,9 @@ function closeModal() {
 
               <div class="relative cursor-pointer dark:text-white flex-1">
                 <span
-                  class="absolute top-0 left-0 w-full h-full mt-1 ml-1 bg-indigo-500 rounded-lg dark:bg-gray-200"
-                ></span>
+                  class="absolute top-0 left-0 w-full h-full mt-1 ml-1 bg-indigo-500 rounded-lg dark:bg-gray-200"></span>
                 <div
-                  class="relative p-6 bg-indigo-100 dark:bg-gray-800 border-2 border-indigo-500 dark:border-gray-300 rounded-lg hover:scale-105 transition duration-500"
-                >
+                  class="relative p-6 bg-indigo-100 dark:bg-gray-800 border-2 border-indigo-500 dark:border-gray-300 rounded-lg hover:scale-105 transition duration-500">
                   <div class="flex items-center">
                     <h3 class="my-2 ml-3 text-lg font-bold text-gray-800 dark:text-white">Previous
                       Loans
@@ -694,27 +666,27 @@ function closeModal() {
               <div class="flex items-start">
                 <Label for="general"
                   class="mr-4 flex bg-gray-200 text-gray-700 rounded-md px-3 py-2 my-3  hover:bg-indigo-300 cursor-pointer">
-                  <input id="general" type="radio" value="General" v-model="form.loan_type"
-                    class="mr-2 mt-1" :tabindex="26" />
+                  <input id="general" type="radio" value="General" v-model="form.loan_type" class="mr-2 mt-1"
+                    :tabindex="26" />
                   <i class="pl-2">General</i>
                 </Label>
                 <Label for="is_urgent"
                   class="mr-4 flex bg-gray-200 text-gray-700 rounded-md px-3 py-2 my-3  hover:bg-indigo-300 cursor-pointer">
-                  <input id="is_urgent" type="radio" value="Urgent" v-model="form.loan_type"
-                    class="mr-2 mt-1" :tabindex="26" />
+                  <input id="is_urgent" type="radio" value="Urgent" v-model="form.loan_type" class="mr-2 mt-1"
+                    :tabindex="26" />
                   <i class="pl-2"> Urgent</i>
                 </Label>
                 <Label for="top_up"
                   class="mr-4 flex bg-gray-200 text-gray-700 rounded-md px-3 py-2 my-3  hover:bg-indigo-300 cursor-pointer">
-                  <input id="top_up" type="radio" value="TopUp" v-model="form.loan_type"
-                    class="mr-2 mt-1" :tabindex="26" />
+                  <input id="top_up" type="radio" value="TopUp" v-model="form.loan_type" class="mr-2 mt-1"
+                    :tabindex="26" />
                   <i class="pl-2">Top Up</i>
                 </Label>
 
                 <Label for="others"
                   class="mr-4 flex bg-gray-200 text-gray-700 rounded-md px-3 py-2 my-3  hover:bg-indigo-300 cursor-pointer">
-                  <input id="others" value="Others" type="radio" v-model="form.loan_type"
-                    class="mr-2 mt-1" :tabindex="26" />
+                  <input id="others" value="Others" type="radio" v-model="form.loan_type" class="mr-2 mt-1"
+                    :tabindex="26" />
                   <i class="pl-2">Others</i>
                 </Label>
               </div>
@@ -722,8 +694,8 @@ function closeModal() {
               <div v-if="form.loan_type === 'Urgent'" class="grid gap-6 mt-4 bg-gray-100 p-4 rounded-md">
                 <div class="grid gap-2">
                   <Label for="urgent_fee">Urgent Fee Amount</Label>
-                  <Input id="urgent_fee" type="text" v-model="form.urgent_fee"
-                    placeholder="Urgent Fee Amount" :tabindex="27" />
+                  <Input id="urgent_fee" type="text" v-model="form.urgent_fee" placeholder="Urgent Fee Amount"
+                    :tabindex="27" />
                   <InputError :message="form.errors.urgent_fee" />
                 </div>
               </div>
@@ -747,20 +719,17 @@ function closeModal() {
             <div class="flex gap-6">
               <div class="flex-1">
                 <Label for="other_loan_amount">Other Loan Amount</Label>
-                <Input id="other_loan_amount" v-model="form.other_loan_amount" type="number"
-                  step="0.01" />
+                <Input id="other_loan_amount" v-model="form.other_loan_amount" type="number" step="0.01" />
                 <InputError :message="form.errors.other_loan_amount" />
               </div>
               <div class="flex-1">
                 <Label for="other_loan_installment">Other Loan Installment</Label>
-                <Input id="other_loan_installment" v-model="form.other_loan_installment" type="number"
-                  step="0.01" />
+                <Input id="other_loan_installment" v-model="form.other_loan_installment" type="number" step="0.01" />
                 <InputError :message="form.errors.other_loan_installment" />
               </div>
               <div class="flex-1">
                 <Label for="other_loan_remaining">Other Loan Remaining</Label>
-                <Input id="other_loan_remaining" v-model="form.other_loan_remaining" type="number"
-                  step="0.01" />
+                <Input id="other_loan_remaining" v-model="form.other_loan_remaining" type="number" step="0.01" />
                 <InputError :message="form.errors.other_loan_remaining" />
               </div>
             </div>
@@ -774,14 +743,12 @@ function closeModal() {
                   <div class="flex items-center gap-4 mt-2">
                     <Label for="self_deposit"
                       class="mr-4 flex bg-gray-200 text-gray-700 rounded-md px-3 py-2 my-3  hover:bg-indigo-300 cursor-pointer">
-                      <input type="radio" id="self_deposit" value="self_deposit"
-                        v-model="form.loan_surety_type" />
+                      <input type="radio" id="self_deposit" value="self_deposit" v-model="form.loan_surety_type" />
                       <i class="pl-2">Self Deposit</i>
                     </Label>
                     <Label for="grantor"
                       class="mr-4 flex bg-gray-200 text-gray-700 rounded-md px-3 py-2 my-3  hover:bg-indigo-300 cursor-pointer">
-                      <input type="radio" id="grantor" value="grantor"
-                        v-model="form.loan_surety_type" />
+                      <input type="radio" id="grantor" value="grantor" v-model="form.loan_surety_type" />
                       <i class="pl-2">Grantor</i>
                     </Label>
                   </div>
@@ -799,8 +766,7 @@ function closeModal() {
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <Label for="grantor_member_id">Grantor Member ID</Label>
-                      <Input id="grantor_member_id" v-model="newGrantor.member_id"
-                        placeholder="Enter member ID" />
+                      <Input id="grantor_member_id" v-model="newGrantor.member_id" placeholder="Enter member ID" />
                     </div>
                     <div>
                       <Label for="grantor_deposit_amount">NPCSS Deposite Amount</Label>
@@ -809,8 +775,7 @@ function closeModal() {
                     </div>
                     <div>
                       <Label for="grantor_loan_amount">NPCSS Loan Amount (if any)</Label>
-                      <Input id="grantor_loan_amount" v-model="newGrantor.loan_amount"
-                        placeholder="Enter amount" />
+                      <Input id="grantor_loan_amount" v-model="newGrantor.loan_amount" placeholder="Enter amount" />
                     </div>
                     <!-- <div>
                                             <Label for="grantor_signeture">Grantor Signature</Label>
@@ -846,8 +811,7 @@ function closeModal() {
                           </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 bg-white">
-                          <tr v-for="(g, idx) in form.grantors" :key="idx"
-                            class="hover:bg-gray-50">
+                          <tr v-for="(g, idx) in form.grantors" :key="idx" class="hover:bg-gray-50">
                             <td class="px-4 py-2 text-center">{{ g.member_id }}</td>
                             <td class="px-4 py-2 text-center">{{ g.deposit_amount }}</td>
                             <td class="px-4 py-2 text-center">{{ g.loan_amount }}</td>
@@ -859,12 +823,10 @@ function closeModal() {
                                                             <span v-else class="text-gray-400">-</span>
                                                         </td> -->
                             <td class="px-4 py-2 flex justify-center gap-2">
-                              <Button type="button" variant="secondary" size="sm"
-                                @click="editGrantor(idx)">
+                              <Button type="button" variant="secondary" size="sm" @click="editGrantor(idx)">
                                 Edit
                               </Button>
-                              <Button type="button" variant="destructive" size="sm"
-                                @click="removeGrantor(idx)">
+                              <Button type="button" variant="destructive" size="sm" @click="removeGrantor(idx)">
                                 Delete
                               </Button>
                             </td>
@@ -876,8 +838,7 @@ function closeModal() {
                 </div>
               </div>
 
-              <div v-if="form.loan_surety_type === 'self_deposit'"
-                class="flex gap-6 mt-4 bg-gray-100 p-4 rounded-md">
+              <div v-if="form.loan_surety_type === 'self_deposit'" class="flex gap-6 mt-4 bg-gray-100 p-4 rounded-md">
                 <div class="flex-1">
                   <Label for="self_deposit_amount">Self Diposit Amount (NPCSS)</Label>
                   <Input id="self_deposit_amount" v-model="form.self_deposit_amount" />
@@ -889,16 +850,12 @@ function closeModal() {
         </div>
 
         <!-- Step 4: Family Member -->
-        <div
-          v-show="currentStep === 3"
-          class="step-content grid gap-6 shadow-md p-6 border rounded-lg bg-gray-100"
-        >
+        <div v-show="currentStep === 3" class="step-content grid gap-6 shadow-md p-6 border rounded-lg bg-gray-100">
           <h2 class="text-2xl font-semibold text-center">Family Information</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="gap-6">
               <Label for="family_member">Number of Family Members</Label>
-              <Input id="family_member" v-model="form.family_member"
-                placeholder="Number of Family Members" />
+              <Input id="family_member" v-model="form.family_member" placeholder="Number of Family Members" />
               <InputError :message="form.errors.family_member" />
             </div>
           </div>
@@ -914,18 +871,17 @@ function closeModal() {
               </div>
               <div>
                 <Label for="family_member_id">Member ID (if applicable)</Label>
-                <Input id="family_member_id" v-model="newFamilyMember.member_id"
-                  placeholder="Enter member ID" />
+                <Input id="family_member_id" v-model="newFamilyMember.member_id" placeholder="Enter member ID" />
               </div>
               <div>
                 <Label for="family_member_deposit">NPCSS Current Deposit</Label>
-                <Input id="family_member_deposit" v-model="newFamilyMember.current_deposit"
-                  type="number" step="0.01" placeholder="Enter amount" />
+                <Input id="family_member_deposit" v-model="newFamilyMember.current_deposit" type="number" step="0.01"
+                  placeholder="Enter amount" />
               </div>
               <div>
                 <Label for="family_member_loan">NPCSS Current Loan (if any)</Label>
-                <Input id="family_member_loan" v-model="newFamilyMember.current_loan" type="number"
-                  step="0.01" placeholder="Enter amount" />
+                <Input id="family_member_loan" v-model="newFamilyMember.current_loan" type="number" step="0.01"
+                  placeholder="Enter amount" />
               </div>
               <!-- <div>
                                 <Label for="family_member_document">Document (Photo or PDF)</Label>
@@ -965,8 +921,7 @@ function closeModal() {
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-gray-100 bg-white">
-                    <tr v-for="(member, idx) in form.family_members" :key="idx"
-                      class="hover:bg-gray-50">
+                    <tr v-for="(member, idx) in form.family_members" :key="idx" class="hover:bg-gray-50">
                       <td class="px-4 py-2 text-center">{{ member.relation }}</td>
                       <td class="px-4 py-2 text-center">{{ member.member_id || '-' }}</td>
                       <td class="px-4 py-2 text-center">{{ member.current_deposit }}</td>
@@ -979,12 +934,10 @@ function closeModal() {
                                                 <span v-else class="text-gray-400">-</span>
                                             </td> -->
                       <td class="px-4 py-2 flex justify-center gap-2">
-                        <Button type="button" variant="secondary" size="sm"
-                          @click="editFamilyMember(idx)">
+                        <Button type="button" variant="secondary" size="sm" @click="editFamilyMember(idx)">
                           Edit
                         </Button>
-                        <Button type="button" variant="destructive" size="sm"
-                          @click="removeFamilyMember(idx)">
+                        <Button type="button" variant="destructive" size="sm" @click="removeFamilyMember(idx)">
                           Delete
                         </Button>
                       </td>
@@ -997,10 +950,7 @@ function closeModal() {
         </div>
 
         <!-- Step 5: Submit -->
-        <div
-          v-show="currentStep === 4"
-          class="grid gap-6 shadow-md p-6 border rounded-lg bg-gray-100"
-        >
+        <div v-show="currentStep === 4" class="grid gap-6 shadow-md p-6 border rounded-lg bg-gray-100">
           <h2 class="text-2xl font-semibold text-center">Review and Submit</h2>
           <h3 class="text-xl font-semibold mb-4">Please review all the information before submitting</h3>
           <div class="flex flex-col gap-6 mt-10">
@@ -1010,8 +960,7 @@ function closeModal() {
               <!-- Card Header -->
               <div class="flex items-center mb-6 pb-4 border-b border-gray-100">
                 <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-50 mr-3">
-                  <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
+                  <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
                     </path>
@@ -1030,18 +979,14 @@ function closeModal() {
                   <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">
                     Selected Product
                   </h2>
-                  <span
-                    class="px-3 py-1 text-xs font-medium rounded-full transition-colors duration-200"
-                    :class="form.product_id ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'"
-                  >
+                  <span class="px-3 py-1 text-xs font-medium rounded-full transition-colors duration-200"
+                    :class="form.product_id ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'">
                     {{ form.product_id ? 'Selected' : 'Not selected' }}
                   </span>
                 </div>
 
                 <!-- Product Name Box -->
-                <div
-                  class="bg-gray-50 p-5 rounded-lg border border-dashed border-gray-300 text-center mb-6"
-                >
+                <div class="bg-gray-50 p-5 rounded-lg border border-dashed border-gray-300 text-center mb-6">
                   <p class="text-lg font-medium text-gray-800">
                     {{form.product_id && props.products ? (props.products.find(p => p.id ===
                       Number(form.product_id))?.name) || 'Product not found'
@@ -1057,8 +1002,7 @@ function closeModal() {
                   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                     <!-- Minimum Amount -->
                     <div
-                      class="bg-blue-50 border border-gray-200 rounded-lg p-4 text-center hover:shadow-md transition-shadow duration-200"
-                    >
+                      class="bg-blue-50 border border-gray-200 rounded-lg p-4 text-center hover:shadow-md transition-shadow duration-200">
                       <p class="text-xs text-gray-500 mb-1">
                         Minimum Amount
                       </p>
@@ -1069,8 +1013,7 @@ function closeModal() {
 
                     <!-- Maximum Amount -->
                     <div
-                      class="bg-blue-50 border border-gray-200 rounded-lg p-4 text-center hover:shadow-md transition-shadow duration-200"
-                    >
+                      class="bg-blue-50 border border-gray-200 rounded-lg p-4 text-center hover:shadow-md transition-shadow duration-200">
                       <p class="text-xs text-gray-500 mb-1">Maximum Amount</p>
                       <p class="text-lg font-bold text-blue-600">{{ form.max_loan_amount || '0' }}
                         BDT</p>
@@ -1078,8 +1021,7 @@ function closeModal() {
 
                     <!-- Interest Rate -->
                     <div
-                      class="bg-blue-50 border border-gray-200 rounded-lg p-4 text-center hover:shadow-md transition-shadow duration-200"
-                    >
+                      class="bg-blue-50 border border-gray-200 rounded-lg p-4 text-center hover:shadow-md transition-shadow duration-200">
                       <p class="text-xs text-gray-500 mb-1">Interest Rate</p>
                       <p class="text-lg font-bold text-purple-600">{{ form.interest_rate || '0'
                       }}%</p>
@@ -1087,8 +1029,7 @@ function closeModal() {
 
                     <!-- Loan Term -->
                     <div
-                      class="bg-blue-50 border border-gray-200 rounded-lg p-4 text-center hover:shadow-md transition-shadow duration-200"
-                    >
+                      class="bg-blue-50 border border-gray-200 rounded-lg p-4 text-center hover:shadow-md transition-shadow duration-200">
                       <p class="text-xs text-gray-500 mb-1">Loan Term</p>
                       <p class="text-lg font-bold text-gray-800">{{ form.loan_term_months || '0'
                       }} months</p>
@@ -1104,8 +1045,7 @@ function closeModal() {
               <!-- Card Header -->
               <div class="flex items-center mb-6 pb-4 border-b border-gray-100">
                 <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-green-50 mr-3">
-                  <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
+                  <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M12 8c-1.1 0-2 .9-2 2s.9 2 2 2m0 0c1.1 0 2 .9 2 2s-.9 2-2 2m0-6V6m0 12v-2m8-4a8 8 0 11-16 0 8 8 0 0116 0z" />
                   </svg>
@@ -1119,8 +1059,7 @@ function closeModal() {
               <!-- Professional Information -->
               <div class="mb-6">
                 <div
-                  class="bg-gray-50 from-indigo-50 via-white to-white p-6 rounded-xl border border-indigo-100 shadow-sm"
-                >
+                  class="bg-gray-50 from-indigo-50 via-white to-white p-6 rounded-xl border border-indigo-100 shadow-sm">
                   <!-- Section Header -->
                   <div class="flex items-center mb-5">
                     <h5 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">
@@ -1168,14 +1107,12 @@ function closeModal() {
                     Income
                   </h5>
                   <div class="space-y-3">
-                    <div
-                      class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                    <div class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
                       <span class="text-gray-600">Self Income</span>
                       <span class="text-green-700 font-medium">{{ form.self_income || '0' }}
                         BDT</span>
                     </div>
-                    <div
-                      class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                    <div class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
                       <span class="text-gray-600">Family Income</span>
                       <span class="text-green-700 font-medium">{{ form.family_income || '0' }}
                         BDT</span>
@@ -1195,31 +1132,26 @@ function closeModal() {
                     Expenses
                   </h5>
                   <div class="space-y-3">
-                    <div
-                      class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                    <div class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
                       <span class="text-gray-600">Rent</span>
                       <span class="text-red-700 font-medium">{{ form.rent || '0' }} BDT</span>
                     </div>
-                    <div
-                      class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                    <div class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
                       <span class="text-gray-600">Food</span>
                       <span class="text-red-700 font-medium">{{ form.food_expense || '0' }}
                         BDT</span>
                     </div>
-                    <div
-                      class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                    <div class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
                       <span class="text-gray-600">Education</span>
                       <span class="text-red-700 font-medium">{{ form.education_expense || '0' }}
                         BDT</span>
                     </div>
-                    <div
-                      class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                    <div class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
                       <span class="text-gray-600">Transport</span>
                       <span class="text-red-700 font-medium">{{ form.transport_expense || '0' }}
                         BDT</span>
                     </div>
-                    <div
-                      class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                    <div class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
                       <span class="text-gray-600">Other</span>
                       <span class="text-red-700 font-medium">{{ form.other_expense || '0' }}
                         BDT</span>
@@ -1240,8 +1172,7 @@ function closeModal() {
               <!-- Card Header -->
               <div class="flex items-center mb-6 pb-4 border-b border-gray-100">
                 <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 mr-3">
-                  <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
+                  <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
                     </path>
@@ -1261,28 +1192,25 @@ function closeModal() {
                     Loan
                   </h5>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div
-                      class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                    <div class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
                       <span class="text-gray-600">Loan Amount</span>
                       <span class="text-blue-700 font-medium">
                         {{ form.loan_amount || '0' }} BDT
                       </span>
                     </div>
-                    <div
-                      class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                    <div class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
                       <span class="text-gray-600">Loan Purpose</span>
                       <span class="text-gray-800 font-medium">
                         {{ form.loan_purpose || 'Not specified' }}
                       </span>
                     </div>
-                    <div
-                      class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                    <div class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
                       <span class="text-gray-600">Loan Type</span>
                       <span class="font-medium" :class="{
-                          'text-blue-600': form.loan_type === 'General',
-                          'text-orange-600': form.loan_type === 'Urgent',
-                          'text-purple-600': form.loan_type === 'TopUp',
-                          'text-gray-600': form.loan_type === 'Others'
+                        'text-blue-600': form.loan_type === 'General',
+                        'text-orange-600': form.loan_type === 'Urgent',
+                        'text-purple-600': form.loan_type === 'TopUp',
+                        'text-gray-600': form.loan_type === 'Others'
                       }">
                         {{ form.loan_type || 'Not specified' }}
                         <span v-if="form.loan_type === 'Urgent'"
@@ -1291,14 +1219,12 @@ function closeModal() {
                         </span>
                       </span>
                     </div>
-                    <div
-                      class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                    <div class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
                       <span class="text-gray-600">Total Installments</span>
                       <span class="text-gray-800 font-medium">{{ form.total_installment || '0'
                       }}</span>
                     </div>
-                    <div
-                      class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                    <div class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
                       <span class="text-gray-600">Start Date</span>
                       <span class="text-gray-800 font-medium">{{ form.start_date || 'Not set'
                       }}</span>
@@ -1312,21 +1238,18 @@ function closeModal() {
                     Other Loan Informatio
                   </h5>
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div
-                      class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                    <div class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
                       <span class="text-gray-600">Loan Amount</span>
                       <span class="text-blue-700 font-medium">{{ form.other_loan_amount || '0' }}
                         BDT</span>
                     </div>
-                    <div
-                      class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                    <div class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
                       <span class="text-gray-600">Installment</span>
                       <span class="text-gray-800 font-medium">{{ form.other_loan_installment ||
                         '0' }}
                       </span>
                     </div>
-                    <div
-                      class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
+                    <div class="flex justify-between items-center bg-white px-3 py-2 rounded-md border border-gray-200">
                       <span class="text-gray-600">Remaining</span>
                       <span class="text-gray-800 font-medium">{{ form.other_loan_remaining || '0'
                       }}
@@ -1353,8 +1276,7 @@ function closeModal() {
                   </div>
 
                   <!-- Grantors Section -->
-                  <div v-if="form.loan_surety_type === 'grantor' && form.grantors.length"
-                    class="mt-5">
+                  <div v-if="form.loan_surety_type === 'grantor' && form.grantors.length" class="mt-5">
                     <h6 class="text-xs font-medium text-gray-500 uppercase mb-2 tracking-wider">
                       Grantors ({{ form.grantors.length }})
                     </h6>
@@ -1404,8 +1326,7 @@ function closeModal() {
               <!-- Card Header -->
               <div class="flex items-center mb-6 pb-4 border-b border-gray-100">
                 <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-50 mr-3">
-                  <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
+                  <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
                     </path>
@@ -1471,8 +1392,7 @@ function closeModal() {
 
               <!-- Empty State -->
               <div v-else class="bg-gray-50 p-6 rounded-lg text-center">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
-                  viewBox="0 0 24 24">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                     d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z">
                   </path>
@@ -1524,4 +1444,5 @@ function closeModal() {
       </form>
     </div>
   </AppLayout>
+  <pre>{{ form.errors }}</pre>
 </template>

@@ -18,8 +18,15 @@ class ProductController extends Controller
     {
         $products = Product::all();
 
+        // Prepare product type options from enum
+        $productTypeOptions = collect(ProductType::cases())->map(fn($case) => [
+            'value' => $case->value,
+            'label' => ucfirst(str_replace('_', ' ', $case->name)),
+        ])->all();
+
         return Inertia::render('product/index', [
             'products' => $products,
+            'productTypeOptions' => $productTypeOptions,
         ]);
     }
 

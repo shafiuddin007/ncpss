@@ -6,8 +6,9 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\RelationshipController;
 use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\DistrictController;
-use App\Http\Controllers\LoanController;
+use App\Http\Controllers\SellProductController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ApplicationController;
 
 Route::middleware('auth',)->group(function () {
     Route::get('/members/create', [MemberController::class, 'create'])->name('member.create');
@@ -18,8 +19,11 @@ Route::middleware('auth',)->group(function () {
     Route::put('/members/{id}', [MemberController::class, 'update'])->name('members.update');
     Route::delete('/members/{id}', [MemberController::class, 'destroy'])->name('member.destroy');
 
-    Route::get('/members/{member}/sell-product', [LoanController::class, 'sellProduct'])->name('members.sell-product');
-    Route::post('/members/{member}/sell-product', [LoanController::class, 'storeSoldProduct'])->name('members.sell-product.store');
+    Route::get('/members/{member}/sell-product', [SellProductController::class, 'sellProduct'])->name('members.sell-product');
+    Route::post('/members/{member}/sell-product', [SellProductController::class, 'storeSoldProduct'])->name('members.sell-product.store');
+
+    Route::get('/applications', [ApplicationController::class, 'index'])->name('applications.index');
+    Route::get('/applications/{application}/show', [ApplicationController::class, 'show'])->name('applications.show');
 
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
     Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
@@ -27,7 +31,7 @@ Route::middleware('auth',)->group(function () {
     Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
-    
+
     Route::get('realationships', [RelationshipController::class, 'list'])->name('relationship.list');
 });
 

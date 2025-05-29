@@ -96,4 +96,12 @@ class Loan extends Model
     {
         return $this->hasMany(Grantor::class);
     }
+
+    /**
+     * Polymorphic relation for Application model.
+     */
+    public function applications()
+    {
+        return $this->morphMany(Application::class, 'model');
+    }
 }

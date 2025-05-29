@@ -118,7 +118,7 @@ const handleSubmit = () => {
 
                         <!-- Max Loan Amount Field -->
                         <div class="flex-1">
-                            <Label for="max_loan_amount">Max Loan Amount</Label>
+                            <Label for="max_loan_amount">Max Amount</Label>
                             <Input
                                 id="max_loan_amount"
                                 type="number"

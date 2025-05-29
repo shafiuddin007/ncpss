@@ -26,7 +26,7 @@ const mainNavItems: NavItem[] = [
     }, 
     {
         title: 'Applicatons',
-        href: '/applicatons',
+        href: '/applications',
         icon: FileText ,
     },
     {

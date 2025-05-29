@@ -2,7 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
-import { defineProps, ref } from 'vue';
+import { defineProps, ref, computed } from 'vue';
 import { EyeIcon, EditIcon, TrashIcon } from 'lucide-vue-next';
 import DeleteModal from '@/components/DeleteModal.vue';
 
@@ -22,6 +22,16 @@ const props = defineProps({
         }>,
         required: true,
     },
+    productTypeOptions: {
+        type: Array as () => Array<{ value: string; label: string }>, 
+        required: true,
+    }
+});
+
+const selectedType = ref('');
+const filteredProducts = computed(() => {
+    if (!selectedType.value) return props.products;
+    return props.products.filter(p => p.type === selectedType.value);
 });
 
 const processing = ref(false);
@@ -127,10 +137,12 @@ const breadcrumbs: BreadcrumbItem[] = [
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="(product, index) in products" :key="product.id">
+                        <tr v-for="(product, index) in filteredProducts" :key="product.id">
                             <td class="border border-gray-300 px-4 py-2 text-center">{{ index + 1 }}</td>
                             <td class="border border-gray-300 px-4 py-2 text-center">{{ product.name }}</td>
-                            <td class="border border-gray-300 px-4 py-2 text-center">{{ product.type }}</td>
+                            <td class="border border-gray-300 px-4 py-2 text-center">
+                                {{ productTypeOptions.find(opt => opt.value === product.type)?.label || product.type }}
+                            </td>
                             <td class="border border-gray-300 px-4 py-2 text-center">
                                 {{ product.interest_rate ?? 0 }}%
                             </td>

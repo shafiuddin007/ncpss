@@ -2,11 +2,8 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Button } from '@/components/ui/button';
 import { defineProps, ref } from 'vue';
-import { EyeIcon, EditIcon, TrashIcon } from 'lucide-vue-next';
-import DeleteModal from '@/components/DeleteModal.vue';
-import IndexTable from '@/components/ui/table/memberIndexTable.vue';
+import IndexTable from '@/components/ui/table/MemberIndexTable.vue';
 
 const props = defineProps({
     members: {
