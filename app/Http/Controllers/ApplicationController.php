@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Enums\ApprovalStatus;
 use App\Enums\ProductType;
+use \Illuminate\Support\Facades\Auth;
 
 class ApplicationController extends Controller
 {
@@ -93,7 +94,10 @@ class ApplicationController extends Controller
             'model.member', 
             'model.familyMembers',
             'model.grantors',
+            'model.product',
         ]);
+
+        //  dd($application->toArray());
 
         return Inertia::render('application/show', [
             'application' => $application,
@@ -125,5 +129,53 @@ class ApplicationController extends Controller
     {
         $application->delete();
         return redirect()->route('applications.index')->with('success', 'Application deleted.');
+    }
+
+    public function approvalHistory(Application $application)
+    {
+        $histories = $application->approvalHistories()
+            ->with('approver')
+            ->orderBy('approval_step')
+            ->get();
+
+        return response()->json([
+            'histories' => $histories,
+        ]);
+    }
+
+    public function approvalAction(Request $request, Application $application)
+    {
+        $validated = $request->validate([
+            'status' => 'required|string',
+            'remarks' => 'nullable|string',
+            'document' => 'nullable|file|max:2048',
+        ]);
+
+        $step = $application->approval_step ?? 1;
+        if ($validated['status'] === 'forwarded') {
+            $step++;
+            $application->approval_step = $step;
+            $application->save();
+        } else {
+            $application->status = $validated['status'];
+            $application->save();
+        }
+
+        $documentPath = null;
+        if ($request->hasFile('document')) {
+            $documentPath = $request->file('document')->store('approval_documents', 'public');
+        }
+
+        $application->approvalHistories()->create([
+            'approval_step' => $step,
+            'approval_role' => optional(Auth::user())->role ?? 'user',
+            'status' => $validated['status'],
+            'remarks' => $validated['remarks'],
+            'document_path' => $documentPath,
+            'created_by' => optional(Auth::user())->id,
+            'created_by_name' => Auth::user()->name ?? '',
+        ]);
+
+        return response()->json(['success' => true]);
     }
 }

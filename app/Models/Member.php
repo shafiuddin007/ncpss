@@ -61,6 +61,8 @@ class Member extends Model
         'perDistrict',
         'perThana',
     ];
+
+    protected $appends = ['photo_url'];
     /**
      * Define the relationship with the Nominee model.
      */
@@ -139,5 +141,23 @@ class Member extends Model
     public function perThana()
     {
         return $this->belongsTo(Thana::class, 'per_thana', 'id');
+    }
+
+    /**
+     * Get the URL of the member's photo.
+     *
+     * @return string|null
+     */
+    public function getPhotoUrlAttribute()
+    {
+        if (!$this->photo) {
+            return null;
+        }
+        // If already a full URL, return as is
+        if (str_starts_with($this->photo, 'http')) {
+            return $this->photo;
+        }
+        // Otherwise, return storage URL
+        return asset('storage/' . $this->photo);
     }
 }

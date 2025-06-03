@@ -84,4 +84,9 @@ class Application extends Model
     {
         return $this->belongsTo(User::class, 'deleted_by');
     }
+
+    public function approvalHistories()
+    {
+        return $this->hasMany(\App\Models\ApprovalHistory::class);
+    }
 }

@@ -24,6 +24,8 @@ Route::middleware('auth',)->group(function () {
 
     Route::get('/applications', [ApplicationController::class, 'index'])->name('applications.index');
     Route::get('/applications/{application}/show', [ApplicationController::class, 'show'])->name('applications.show');
+    Route::get('/applications/{application}/approval-history', [ApplicationController::class, 'approvalHistory'])->name('applications.approval-history');
+    Route::post('/applications/{application}/approval-action', [ApplicationController::class, 'approvalAction'])->name('applications.approval-action');
 
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
     Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
