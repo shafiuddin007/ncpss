@@ -10,7 +10,8 @@ use App\Http\Controllers\SellProductController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ApplicationController;
 
-Route::middleware('auth',)->group(function () {
+//Route::middleware('auth',)->group(function () {
+Route::group(['middleware' => ['role:admin']], function () {
     Route::get('/members/create', [MemberController::class, 'create'])->name('member.create');
     Route::get('/members', [MemberController::class, 'list'])->name('member.list');
     Route::post('/members', [MemberController::class, 'store'])->name('member.add');

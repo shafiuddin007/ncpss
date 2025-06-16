@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Enums\ApprovalStatus;
 use App\Enums\ProductType;
+use App\Models\ApprovalHistory;
 use \Illuminate\Support\Facades\Auth;
 
 class ApplicationController extends Controller
@@ -145,6 +146,10 @@ class ApplicationController extends Controller
 
     public function approvalAction(Request $request, Application $application)
     {
+        $history = ApprovalHistory::where('application_id', $application->id)
+            ->orderByDesc('id')
+            ->first();
+
         $validated = $request->validate([
             'status' => 'required|string',
             'remarks' => 'nullable|string',

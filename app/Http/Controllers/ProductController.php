@@ -8,6 +8,8 @@ use Illuminate\Support\Js;
 use Inertia\Inertia;
 use Illuminate\Http\JsonResponse;
 use App\Enums\ProductType;
+use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Models\Permission;
 
 class ProductController extends Controller
 {
@@ -16,6 +18,11 @@ class ProductController extends Controller
      */
     public function index()
     {
+        // $user = Auth::user();
+        // if ($user->hasPermissionTo('member')) {
+        //     abort(403, 'You do not have permission to edit posts.');
+        // }
+        
         $products = Product::all();
 
         // Prepare product type options from enum

@@ -11,12 +11,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 
 class MemberController extends Controller
 {
     public function list(): Response
     {
+        // $user = Auth::user();
+        // if ($user->hasPermissionTo('member')) {
 
+        //     abort(403, 'You do not have permission to edit posts.');
+        // }
         return Inertia::render('member/index', [
             'members' => Member::all()->where('is_deleted', false),
         ]);
@@ -152,7 +157,7 @@ class MemberController extends Controller
     public function show($id): Response
     {
         $member = Member::findOrFail($id);
-        
+
         return Inertia::render('member/show', [
             'member' => $member,
         ]);
