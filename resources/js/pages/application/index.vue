@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import DataTable from '@/components/ui/table/ApplicationDataTable.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 
 const props = defineProps<{
@@ -9,6 +9,9 @@ const props = defineProps<{
   statusOptions: Array<{ value: string, label: string }>,
   productTypeOptions: Array<{ value: string, label: string }>
 }>();
+
+const page = usePage();
+const userRole = page.props.role as string;
 
 const breadcrumbs = [
   { title: 'Applications', href: '/applications' },
@@ -30,8 +33,8 @@ type ApprovalHistory = {
   status: string;
   remarks: string;
   document?: string; // Optional, if documents are included in history
-  created_at?: string;
-  created_by_name?: string;
+  approval_date?: string;
+  approved_by_name?: string;
 };
 
 const approvalHistories = ref<ApprovalHistory[]>([]);
@@ -179,6 +182,7 @@ async function submitAction() {
           <th class="border px-2 py-1">Application Number</th>
           <th class="border px-2 py-1">Type</th>
           <th class="border px-2 py-1">Status</th>
+          <th class="border px-2 py-1">Role</th>
           <th class="border px-2 py-1">Actions</th>
         </template>
         <template #tbody>
@@ -204,11 +208,18 @@ async function submitAction() {
                 }}
               </span>
             </td>
+            <td class="border px-2 py-1 capitalize text-center">{{ app.role }}</td>
             <td class="border px-2 py-1">
               <div class="flex justify-center gap-4">
                 <Link :href="`/applications/${app.id}/show`" class="text-green-600">Details</Link>
                 <button @click="openHistoryModal(app)" class="text-blue-600 cursor-pointer">Approval History</button>
-                <button @click="openActionModal(app)" class="text-red-600 cursor-pointer">Action</button>
+                <button
+                  v-if="userRole === app.role"
+                  @click="openActionModal(app)"
+                  class="text-red-600 cursor-pointer"
+                >
+                  Action
+                </button>
               </div>
             </td>
           </tr>
@@ -263,8 +274,8 @@ async function submitAction() {
                     <th class="px-6 py-3 font-medium text-sm uppercase tracking-wider text-center">Status</th>
                     <th class="px-6 py-3 font-medium text-sm uppercase tracking-wider text-center">Remarks</th>
                     <th class="px-6 py-3 font-medium text-sm uppercase tracking-wider text-center">Document</th>
-                    <th class="px-6 py-3 font-medium text-sm uppercase tracking-wider text-center">Create Date</th>
-                    <th class="px-6 py-3 font-medium text-sm uppercase tracking-wider text-center">Create By</th>
+                    <th class="px-6 py-3 font-medium text-sm uppercase tracking-wider text-center">Approval Date</th>
+                    <th class="px-6 py-3 font-medium text-sm uppercase tracking-wider text-center">Approved By</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -272,7 +283,7 @@ async function submitAction() {
                     :class="{ 'bg-gray-50': index % 2 === 0, 'hover:bg-blue-50 transition-colors duration-150': true }">
                     <td class="px-6 py-4 whitespace-nowrap text-center font-medium text-gray-900">{{ h.approval_step }}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-gray-700 text-center">{{ h.approval_role }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-700 capitalize text-center">{{ h.approval_role }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-center">
                       <span :class="{
                         'px-3 py-1 rounded-full font-medium capitalize': true,
@@ -295,13 +306,13 @@ async function submitAction() {
                       <span v-else class="text-gray-500">No Document</span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-gray-600 text-center">
-                      {{ h.created_at ? new Date(h.created_at).toLocaleDateString('en-GB', {
+                      {{ h.approval_date ? new Date(h.approval_date).toLocaleDateString('en-GB', {
                         day: '2-digit', month:
                           'short',
                         year: 'numeric' }).replace(/ /g, ' ') : '-' }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-gray-700 text-center">
-                      {{ h.created_by_name || '-' }}
+                      {{ h.approved_by_name || '-' }}
                     </td>
                   </tr>
                 </tbody>

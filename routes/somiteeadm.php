@@ -10,8 +10,9 @@ use App\Http\Controllers\SellProductController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ApplicationController;
 
-//Route::middleware('auth',)->group(function () {
-Route::group(['middleware' => ['role:admin']], function () {
+// Route::middleware('auth',)->group(function () {
+Route::group(['middleware' =>
+['role:admin|loan committee member|loan committee secretary| loan committee chairman|managing committee secretary']], function () {
     Route::get('/members/create', [MemberController::class, 'create'])->name('member.create');
     Route::get('/members', [MemberController::class, 'list'])->name('member.list');
     Route::post('/members', [MemberController::class, 'store'])->name('member.add');
@@ -37,6 +38,17 @@ Route::group(['middleware' => ['role:admin']], function () {
 
     Route::get('realationships', [RelationshipController::class, 'list'])->name('relationship.list');
 });
+
+// Route::group(['middleware' => ['role:loan committee member|loan committee secretary|loan committee chairman|managing committee secretary
+// ']], function () {  
+//     Route::get('/members', [MemberController::class, 'list'])->name('member.list');    
+//     Route::get('/members/{id}', [MemberController::class, 'show'])->name('members.show');
+
+//     Route::get('/applications', [ApplicationController::class, 'index'])->name('applications.index');
+//     Route::get('/applications/{application}/show', [ApplicationController::class, 'show'])->name('applications.show');
+//     Route::get('/applications/{application}/approval-history', [ApplicationController::class, 'approvalHistory'])->name('applications.approval-history');
+//     Route::post('/applications/{application}/approval-action', [ApplicationController::class, 'approvalAction'])->name('applications.approval-action');
+// });
 
 Route::get('/divisions/{division}/districts', [DivisionController::class, 'getDistricts'])->name('api.divisions.districts');
 Route::get('/districts/{district}/thanas', [DistrictController::class, 'getThanas'])->name('api.districts.thanas');

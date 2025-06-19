@@ -43,17 +43,15 @@ class SellProductController extends Controller
         try {
             DB::beginTransaction();
             $product = Product::findOrFail($request->input('product_id'));
-             dd($request, $memberId);
             if ($product->type == ProductType::LOAN) {
-                
+
                 $loanId = $this->storeLoanProduct($request, $memberId);
 
                 if (!$loanId) {
                     // Error from storeLoanProduct
                     return redirect()->back()->withErrors(['application' => 'Failed to create loan.'])->withInput();
                 }
-            } 
-            else {
+            } else {
                 return redirect()->back()->withErrors(['application' => 'Selected product is not a loan.'])->withInput();
             }
 
@@ -64,6 +62,7 @@ class SellProductController extends Controller
                 'application_number' => Application::generateApplicationNumber($loanId),
                 'approval_step' => 1,
                 'status' => ApprovalStatus::PENDING->value,
+                'role' => 'loan committee member',
                 'notes' => 'Application submitted successfully and waiting for Approval',
                 'application_date' => now(),
                 'created_by' => Auth::id(),
@@ -73,7 +72,7 @@ class SellProductController extends Controller
             ApprovalHistory::create([
                 'application_id' => $application->id,
                 'approval_step' => 1,
-                'approval_role' => 'Office exicutive',
+                'approval_role' => 'loan committee member',
                 'status' => ApprovalStatus::PENDING->value,
                 'remarks' => 'Application submitted successfully and waiting for Approval',
                 'document_path' => null,

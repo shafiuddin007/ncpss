@@ -9,6 +9,7 @@
         </div>
         <div class="mt-4 md:mt-0">
           <button
+            v-if="showAdd"
             class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition duration-150 ease-in-out"
             @click="$emit('add')"
           >
@@ -86,8 +87,8 @@
             </td> -->
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
               <a href="#" class="text-green-600 hover:text-green-900 mr-3" @click.prevent="$emit('view', row)">View</a>
-              <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-3" @click.prevent="$emit('edit', row)">Edit</a>
-              <a href="#" class="text-red-600 hover:text-red-900" @click.prevent="$emit('delete', row)">Delete</a>
+              <a v-if="showEdit" href="#" class="text-indigo-600 hover:text-indigo-900 mr-3" @click.prevent="$emit('edit', row)">Edit</a>
+              <a v-if="showDelete" href="#" class="text-red-600 hover:text-red-900" @click.prevent="$emit('delete', row)">Delete</a>
             </td>
           </tr>
         </tbody>
@@ -148,7 +149,10 @@ const props = defineProps<{
   columns?: Array<{ key: string, label: string, thClass?: string }>,
   rows: Array<any>,
   departments?: string[],
-  pageSize?: number
+  pageSize?: number,
+  showAdd?: boolean,
+  showEdit?: boolean,
+  showDelete?: boolean,
 }>();
 
 const emit = defineEmits(['add', 'edit', 'delete', 'search', 'filter', 'sort', 'view']);

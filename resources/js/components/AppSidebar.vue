@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -8,33 +10,66 @@ import { Link } from '@inertiajs/vue3';
 import { BookOpen, Folder, LayoutGrid, BoxIcon, Users2, FileText } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
+const page = usePage();
+const userRole = computed<string>(() => (page.props.role as string) || 'member');
+console.log('User Role:', userRole.value);
+
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: '/dashboard',
         icon: LayoutGrid,
+        roles: [
+            'admin',
+            'member',
+            'loan committee member',
+            'loan committee secretary',
+            'loan committee chairman',
+            'managing committee secretary'
+        ],
     },
     {
         title: 'Members',
         href: '/members',
         icon: Users2,
+        roles: [
+            'admin',
+            'loan committee member',
+            'loan committee secretary',
+            'loan committee chairman',
+            'managing committee secretary' // <-- add this role
+        ],
     }, 
     {
         title: 'Product',
         href: '/products',
         icon: BoxIcon,
+        roles: [
+            'admin',
+            'member'
+            // 'loan committee member' removed
+        ],
     }, 
     {
-        title: 'Applicatons',
+        title: 'Applications',
         href: '/applications',
-        icon: FileText ,
+        icon: FileText,
+        roles: [
+            'admin',
+            'loan committee member',
+            'loan committee secretary',
+            'loan committee chairman',
+            'managing committee secretary' // <-- add this role
+        ],
     },
     {
         title: 'Relationships',
         href: '/realationships',
         icon: LayoutGrid,
+        roles: [
+            'admin'
+        ],
     },
-
 ];
 
 const footerNavItems: NavItem[] = [
@@ -49,6 +84,13 @@ const footerNavItems: NavItem[] = [
         icon: BookOpen,
     },
 ];
+
+// Show all menus if admin, otherwise filter by roles
+const filteredMainNavItems = computed(() =>
+    userRole.value === 'admin'
+        ? mainNavItems
+        : mainNavItems.filter(item => !item.roles || item.roles.includes(userRole.value))
+);
 </script>
 
 <template>
@@ -66,7 +108,7 @@ const footerNavItems: NavItem[] = [
         </SidebarHeader>
 
         <SidebarContent>
-            <NavMain :items="mainNavItems" />
+            <NavMain :items="filteredMainNavItems" />
         </SidebarContent>
 
         <SidebarFooter>

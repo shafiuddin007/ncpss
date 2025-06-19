@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { defineProps, ref } from 'vue';
 import IndexTable from '@/components/ui/table/MemberIndexTable.vue';
 
@@ -11,6 +11,9 @@ const props = defineProps({
         required: true,
     },
 });
+
+const page = usePage();
+const userRole = page.props.role as string;
 
 const processing = ref(false);
 
@@ -100,6 +103,8 @@ function confirmDelete() {
         handleDelete(`/members/${memberToDelete.value.id}`, closeDeleteModal);
     }
 }
+
+
 </script>
 
 <template>
@@ -134,6 +139,9 @@ function confirmDelete() {
                 :departments="[]"
                 :pageSize="10"
                 :hasActions="true"
+                :showAdd="userRole == 'admin'"
+                :showEdit="userRole == 'admin'"
+                :showDelete="userRole == 'admin'"
                 @view="row => router.visit(`/members/${row.id}`)"
                 @edit="row => router.visit(`/members/${row.id}/edit`)"
                 @delete="openDeleteModal"
