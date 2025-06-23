@@ -124,179 +124,168 @@ class ApplicationController extends Controller
         if ($request->hasFile('document')) {
             $documentPath = $request->file('document')->store('approval_documents', 'public');
         }
-        // ============================= APPROVAL LOGIC ==============================
-        if ($history->approval_step == 1 && $role === 'loan committee member') {
-            $errorResponse = $this->validateApprovalStepOne($validated, $history, $role);
-            if ($errorResponse) {
-                return $errorResponse;
-            }
 
+        switch (true) {
+            case $history->approval_step == 1 && $role === 'loan committee member':
+                return $this->handleStepOne($validated, $history, $role, $application, $documentPath, $request);
 
-            // Update the current history record
-            $history->status = $validated['status'];
-            $history->remarks = $validated['remarks'] ?? $history->remarks;
-            $history->document_path = $request->hasFile('document') ?  $documentPath : $history->document_path;
-            $history->approval_date = now();
-            $history->approved_by = optional(Auth::user())->id;
-            $history->approved_by_name = Auth::user()->name;
-            $history->save();
+            case $history->approval_step == 2 && $role === 'loan committee secretary':
+                return $this->handleStepTwo($validated, $history, $role, $application, $documentPath, $request);
 
-            //Update application status and approval step    
-            $step = $application->approval_step ?? 1;
-            if ($validated['status'] === 'forwarded') {
-                $step++;
-                $application->approval_step = $step;
-                $application->role = 'loan committee secretary';
-                $application->updated_by = optional(Auth::user())->id;
-                $application->updated_by_name = Auth::user()->name ?? '';
-                $application->updated_at = now();
-                $application->save();
+            case $history->approval_step == 3 && $role === 'loan committee chairman':
+                return $this->handleStepThree($validated, $history, $role, $application, $documentPath, $request);
 
-                ApprovalHistory::create([
-                    'application_id' => $application->id,
-                    'approval_step' => $step,
-                    'approval_role' => 'loan committee secretary',
-                    'status' => ApprovalStatus::PENDING->value,
-                    'created_at' => now(),
-                ]);
-            } else {
-                $application->status = $validated['status'];
-                $application->role = $role;
-                $application->updated_by = optional(Auth::user())->id;
-                $application->updated_by_name = Auth::user()->name ?? '';
-                $application->updated_at = now();
-                $application->save();
-            }
+            case $history->approval_step == 4 && $role === 'managing committee secretary':
+                return $this->handleStepFour($validated, $history, $role, $application, $documentPath, $request);
 
-            return response()->json(['success' => true]);
-        } elseif ($history->approval_step == 2 && $role === 'loan committee secretary') {
-            // Validate the status change
-            $errorResponse = $this->validateApprovalStepOne($validated, $history, $role);
-            if ($errorResponse) {
-                return $errorResponse;
-            }
-
-            // Update the current history record
-            $history->status = $validated['status'];
-            $history->remarks = $validated['remarks'] ?? $history->remarks;
-            $history->document_path = $request->hasFile('document') ?  $documentPath : $history->document_path;
-            $history->approval_date = now();
-            $history->approved_by = optional(Auth::user())->id;
-            $history->approved_by_name = Auth::user()->name;
-            $history->save();
-
-            //Update application status and approval step 
-            $step = $application->approval_step ?? 2;
-            if ($validated['status'] === 'forwarded') {
-                $step++;
-                $application->approval_step = $step;
-                $application->role = 'loan committee chairman';
-                $application->updated_by = optional(Auth::user())->id;
-                $application->updated_by_name = Auth::user()->name ?? '';
-                $application->updated_at = now();
-                $application->save();
-
-                ApprovalHistory::create([
-                    'application_id' => $application->id,
-                    'approval_step' => $step,
-                    'approval_role' => 'loan committee chairman',
-                    'status' => ApprovalStatus::PENDING->value,
-                    'created_at' => now(),
-                ]);
-            } else {
-                // If not forwarded, update the application status
-                $application->status = $validated['status'];
-                $application->role = 'loan committee secretary';
-                $application->updated_by = optional(Auth::user())->id;
-                $application->updated_by_name = Auth::user()->name ?? '';
-                $application->updated_at = now();
-                $application->save();
-            }
-        } elseif ($history->approval_step == 3 && $role === 'loan committee chairman') {
-            // Validate the status change
-            $errorResponse = $this->validateApprovalStepOne($validated, $history, $role);
-            if ($errorResponse) {
-                return $errorResponse;
-            }
-
-            // Update the current history record
-            $history->status = $validated['status'];
-            $history->remarks = $validated['remarks'] ?? $history->remarks;
-            $history->document_path = $request->hasFile('document') ?  $documentPath : $history->document_path;
-            $history->approval_date = now();
-            $history->approved_by = optional(Auth::user())->id;
-            $history->approved_by_name = Auth::user()->name;
-            $history->save();
-
-            //Update application status and approval step 
-            $step = $application->approval_step ?? 3;
-            if ($validated['status'] === 'forwarded') {
-                $step++;
-                $application->approval_step = $step;
-                $application->role = 'managing committee secretary';
-                $application->updated_by = optional(Auth::user())->id;
-                $application->updated_by_name = Auth::user()->name ?? '';
-                $application->updated_at = now();
-                $application->save();
-
-                ApprovalHistory::create([
-                    'application_id' => $application->id,
-                    'approval_step' => $step,
-                    'approval_role' => 'managing committee secretary',
-                    'status' => ApprovalStatus::PENDING->value,
-                    'created_at' => now(),
-                ]);
-            } else {
-                // If not forwarded, update the application status
-                $application->status = $validated['status'];
-                $application->role = 'loan committee chairman';
-                $application->updated_by = optional(Auth::user())->id;
-                $application->updated_by_name = Auth::user()->name ?? '';
-                $application->updated_at = now();
-                $application->save();
-            }
-        } elseif ($history->approval_step == 4 && $role === 'managing committee secretary') {
-            // Validate the status change
-            // $errorResponse = $this->validateApprovalStepOne($validated, $history, $role);
-            // if ($errorResponse) {
-            //     return $errorResponse;
-            // }
-
-            // Update the current history record
-            $history->status = $validated['status'];
-            $history->remarks = $validated['remarks'] ?? $history->remarks;
-            $history->document_path = $request->hasFile('document') ?  $documentPath : $history->document_path;
-            $history->approval_date = now();
-            $history->approved_by = optional(Auth::user())->id;
-            $history->approved_by_name = Auth::user()->name;
-            $history->save();
-
-            //Update application status and approval step 
-            if ($validated['status'] === 'forwarded') {
-                return response()->json(['error' => 'You cannot forward the application at this step.'], 422);
-            } else {
-                // If not forwarded, update the application status
-                $application->status = $validated['status'];
-                $application->role = 'managing committee secretary';
-                if ($validated['status'] === ApprovalStatus::APPROVED->value) {
-                    $application->is_approved = true;
-                    $application->approval_date = now();
-                    $application->approved_by = optional(Auth::user())->id;
-                    $application->approved_by_name = Auth::user()->name ?? '';
-                } elseif ($validated['status'] === ApprovalStatus::REJECTED->value) {
-                    $application->is_rejected = true;
-                    $application->rejection_date = now();
-                    $application->rejected_by = optional(Auth::user())->id;
-                    $application->rejected_by_name = Auth::user()->name ?? '';
-                }
-                $application->updated_by = optional(Auth::user())->id;
-                $application->updated_by_name = Auth::user()->name ?? '';
-                $application->updated_at = now();
-                $application->save();
-            }
-        } else {
-            return response()->json(['error' => 'Invalid approval step or role.'], 422);
+            default:
+                return response()->json(['error' => 'Invalid approval step or role.'], 422);
         }
+    }
+
+    // Step 1: loan committee member
+    private function handleStepOne($validated, $history, $role, $application, $documentPath, $request)
+    {
+        $errorResponse = $this->validateApprovalStepOne($validated, $history, $role);
+        if ($errorResponse) {
+            return $errorResponse;
+        }
+
+        $this->updateHistory($history, $validated, $documentPath, $role);
+        $step = $application->approval_step ?? 1;
+
+        if ($validated['status'] === 'forwarded') {
+            $step++;
+            $this->forwardApplication($application, $step, 'loan committee secretary');
+        } else {
+            $this->updateApplicationStatus($application, $validated['status'], $role);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    // Step 2: loan committee secretary
+    private function handleStepTwo($validated, $history, $role, $application, $documentPath, $request)
+    {
+        $errorResponse = $this->validateApprovalStepOne($validated, $history, $role);
+        if ($errorResponse) {
+            return $errorResponse;
+        }
+
+        $this->updateHistory($history, $validated, $documentPath, $role);
+        $step = $application->approval_step ?? 2;
+
+        if ($validated['status'] === 'forwarded') {
+            $step++;
+            $this->forwardApplication($application, $step, 'loan committee chairman');
+        } else {
+            $this->updateApplicationStatus($application, $validated['status'], $role);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    // Step 3: loan committee chairman
+    private function handleStepThree($validated, $history, $role, $application, $documentPath, $request)
+    {
+        $errorResponse = $this->validateApprovalStepOne($validated, $history, $role);
+        if ($errorResponse) {
+            return $errorResponse;
+        }
+
+        $this->updateHistory($history, $validated, $documentPath, $role);
+        $step = $application->approval_step ?? 3;
+
+        if ($validated['status'] === 'forwarded') {
+            $step++;
+            $this->forwardApplication($application, $step, 'managing committee secretary');
+        } else {
+            $this->updateApplicationStatus($application, $validated['status'], $role);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    // Step 4: managing committee secretary
+    private function handleStepFour($validated, $history, $role, $application, $documentPath, $request)
+    {
+        $this->updateHistory($history, $validated, $documentPath, $role);
+
+        if ($validated['status'] === 'forwarded') {
+            return response()->json(['error' => 'You cannot forward the application at this step.'], 422);
+        } else {
+            $this->updateFinalApplicationStatus($application, $validated['status'], $role);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    // Helper to update approval history
+    private function updateHistory($history, $validated, $documentPath, $role)
+    {
+        $history->status = $validated['status'];
+        $history->approval_role = $role;
+        $history->remarks = $validated['remarks'] ?? $history->remarks;
+        $history->document_path = $documentPath ?? $history->document_path;
+        $history->approval_date = now();
+        $history->approved_by = optional(Auth::user())->id;
+        $history->approved_by_name = Auth::user()->name;
+        $history->save();
+    }
+
+    // Helper to forward application to next step
+    private function forwardApplication($application, $step, $nextRole)
+    {
+        $application->approval_step = $step;
+        $application->role = $nextRole;
+        $application->updated_by = optional(Auth::user())->id;
+        $application->updated_by_name = Auth::user()->name ?? '';
+        $application->updated_at = now();
+        $application->save();
+
+        ApprovalHistory::create([
+            'application_id' => $application->id,
+            'approval_step' => $step,
+            'approval_role' => $nextRole,
+            'status' => ApprovalStatus::PENDING->value,
+            'created_at' => now(),
+        ]);
+    }
+
+    // Helper to update application status (not final step)
+    private function updateApplicationStatus($application, $status, $role)
+    {
+        $application->status = $status;
+        $application->role = $role;
+        $application->updated_by = optional(Auth::user())->id;
+        $application->updated_by_name = Auth::user()->name ?? '';
+        $application->updated_at = now();
+        $application->save();
+    }
+
+    // Helper to update application status for final step
+    private function updateFinalApplicationStatus($application, $status, $role)
+    {
+        $application->status = $status;
+        $application->role = $role;
+
+        if ($status === ApprovalStatus::APPROVED->value) {
+            $application->is_approved = true;
+            $application->notes = 'Loan application arroved by the committee';
+            $application->approval_date = now();
+            $application->approved_by = optional(Auth::user())->id;
+            $application->approved_by_name = Auth::user()->name ?? '';
+        } elseif ($status === ApprovalStatus::REJECTED->value) {
+            $application->is_rejected = true;
+            $application->rejection_date = now();
+            $application->rejected_by = optional(Auth::user())->id;
+            $application->rejected_by_name = Auth::user()->name ?? '';
+        }
+
+        $application->updated_by = optional(Auth::user())->id;
+        $application->updated_by_name = Auth::user()->name ?? '';
+        $application->updated_at = now();
+        $application->save();
     }
 
     /* ===========================================================
@@ -312,13 +301,6 @@ class ApplicationController extends Controller
         if ($history && $history->status === ApprovalStatus::APPROVED->value && $validated['status'] !== ApprovalStatus::FORWARDED->value) {
             return response()->json(['error' => 'You cannot change the status after it has been approved.'], 422);
         }
-        // if ($validated['status'] === ApprovalStatus::REJECTED->value && $role !== 'admin') {
-        //     return response()->json(['error' => 'Only admin can reject an application.'], 422);
-        // }
-
-        // if ($validated['status'] === ApprovalStatus::APPROVED->value && $role !== 'admin') {
-        //     return response()->json(['error' => 'Only admin can approve an application.'], 422);
-        // }
 
         return null; // No error
     }

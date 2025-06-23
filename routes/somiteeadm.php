@@ -12,7 +12,7 @@ use App\Http\Controllers\ApplicationController;
 
 // Route::middleware('auth',)->group(function () {
 Route::group(['middleware' =>
-['role:admin|loan committee member|loan committee secretary| loan committee chairman|managing committee secretary']], function () {
+['role:admin|loan committee member|loan committee secretary|loan committee chairman|managing committee secretary']], function () {
     Route::get('/members/create', [MemberController::class, 'create'])->name('member.create');
     Route::get('/members', [MemberController::class, 'list'])->name('member.list');
     Route::post('/members', [MemberController::class, 'store'])->name('member.add');
