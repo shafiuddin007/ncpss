@@ -5,7 +5,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\DivisionController;
 
 Route::get('/', function () {
-    return Inertia::render('Welcome');
+    return Inertia::render('auth/Login');
 })->name('home');
 
 Route::get('dashboard', function () {

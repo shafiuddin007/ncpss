@@ -3,6 +3,11 @@ TRUNCATE TABLE divisions;
 TRUNCATE TABLE districts;
 TRUNCATE TABLE relationships;
 TRUNCATE TABLE thanas;
+TRUNCATE TABLE permissions;
+TRUNCATE TABLE roles;
+TRUNCATE TABLE role_has_permissions;
+TRUNCATE TABLE model_has_roles;
+
 
 
 INSERT INTO `countries` (`id`, `name`, `short_code`, `phone_code`, `currency_code`, `created_at`, `updated_at`) VALUES
@@ -868,3 +873,27 @@ INSERT INTO `thanas` (`id`, `thana_name_bn`, `thana_name_en`, `is_active`, `is_d
 	(518, 'গোয়াইনঘাট', 'Gowainghat', 1, 0, '2024-09-09 18:00:00', '2024-09-09 18:00:00', 64),
 	(519, 'কানাইঘাট', 'Kanaighat', 1, 0, '2024-09-09 18:00:00', '2024-09-09 18:00:00', 64),
 	(520, 'ওসমানী নগর', 'Osmani Nagar', 1, 0, '2024-09-09 18:00:00', '2024-09-09 18:00:00', 64);
+
+
+INSERT INTO `permissions` (`id`, `name`, `guard_name`, `created_at`, `updated_at`) VALUES
+	(1, 'dashboard', 'web', '2025-06-14 17:08:17', '2025-06-14 17:08:17'),
+	(2, 'member', 'web', '2025-06-14 17:08:18', '2025-06-14 17:08:18'),
+	(3, 'product', 'web', '2025-06-14 17:08:18', '2025-06-14 17:08:18'),
+	(4, 'application', 'web', '2025-06-14 17:08:18', '2025-06-14 17:08:18'),
+	(5, 'users', 'web', '2025-06-25 11:30:48', '2025-06-25 11:30:52');
+	
+
+INSERT INTO `roles` (`id`, `name`, `guard_name`, `created_at`, `updated_at`) VALUES
+	(1, 'admin', 'web', '2025-06-14 17:08:17', '2025-06-14 17:08:17');
+	
+
+INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
+	(1, 1),
+	(2, 1),
+	(3, 1),
+	(4, 1),
+	(5, 1);
+	
+
+INSERT INTO `model_has_roles` (`role_id`, `model_type`, `model_id`) VALUES
+	(1, 'App\\Models\\User', 1);

@@ -39,10 +39,8 @@ class MemberController extends Controller
         ]);
     }
 
-    public function store(Request $request): Response
+    public function store(Request $request)
     {
-
-        // Validate the request data
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'father_name' => 'required|string|max:255',
@@ -53,10 +51,10 @@ class MemberController extends Controller
             'place_of_birth' => 'nullable|string|max:255',
             'gender' => 'required|string|in:Male,Female,Others',
             'religion' => 'required|string|max:255',
-            'blood_group' => 'string|max:5',
+            'blood_group' => 'nullable|string|max:10',
             'marital_status' => 'required|string',
             'nationality' => 'required|string|max:255',
-            'nid' => 'required|string|max:20',
+            'nid' => 'nullable|string|max:255',
             'occupation' => 'nullable|string|max:255',
             'educational_level' => 'nullable|string|max:255',
 
@@ -81,17 +79,17 @@ class MemberController extends Controller
 
             // Nominee fields
             'nominee_name' => 'required|string|max:255',
-            'nominee_nid' => 'required|string|max:20',
+            'nominee_nid' => 'nullable|string|max:255',
             'nominee_relationship' => 'required|string|max:255',
-            'nominee_age' => 'nullable|integer|min:0',
-            'contact_number' => 'required|string|max:15',
-            'nominee_address' => 'required|string|max:255',
+            'nominee_age' => 'nullable|numeric|nullable',
+            'contact_number' => 'nullable|string|max:255',
+            'nominee_address' => 'nullable|string|max:255',
 
             // Introducer fields
-            'introducer_name' => 'required|string|max:255',
-            'introducer_account_number' => 'required|string|max:20',
-            'introducer_signature' => 'required|file|max:2048',
-            'introducer_date' => 'required|date',
+            'introducer_account_number' => 'required|string|max:255',
+            'introducer_name' => 'nullable|string|max:255',
+            'introducer_signature' => 'nullable|file',
+            'introducer_date' => 'nullable|date',
             'acknowledgement' => 'accepted',
         ]);
 
@@ -178,7 +176,7 @@ class MemberController extends Controller
             'gender' => 'required|string|in:male,female,others',
             'religion' => 'required|string|max:255',
             'blood_group' => 'nullable|string|max:5',
-            'nid' => 'required|string|max:20',
+            'nid' => 'nullable|string|max:255',
         ]);
 
         $member->update($validated);
@@ -221,3 +219,5 @@ class MemberController extends Controller
         }
     }
 }
+    
+

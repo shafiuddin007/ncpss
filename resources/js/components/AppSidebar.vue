@@ -70,6 +70,22 @@ const mainNavItems: NavItem[] = [
             'admin'
         ],
     },
+    {
+        title: 'User Management',
+        href: '/users',
+        icon: LayoutGrid,
+        roles: [
+            'admin'
+        ],
+    },
+    {
+        title: 'Role Permission',
+        href: '/roles-permissions',
+        icon: LayoutGrid,
+        roles: [
+            'admin'
+        ],
+    },
 ];
 
 const footerNavItems: NavItem[] = [

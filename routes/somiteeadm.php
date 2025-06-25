@@ -9,6 +9,8 @@ use App\Http\Controllers\DistrictController;
 use App\Http\Controllers\SellProductController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ApplicationController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\RolePermissionController;
 
 // Route::middleware('auth',)->group(function () {
 Route::group(['middleware' =>
@@ -37,6 +39,21 @@ Route::group(['middleware' =>
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
 
     Route::get('realationships', [RelationshipController::class, 'list'])->name('relationship.list');
+
+    // User management routes (admin only)
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store');
+        Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+        Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
+        // Role permission management routes
+        Route::get('/roles-permissions', [RolePermissionController::class, 'index'])->name('roles.permissions.index');
+        Route::get('/roles-permissions/edit', [RolePermissionController::class, 'edit'])->name('roles.permissions.edit');
+        Route::post('/roles-permissions/update', [RolePermissionController::class, 'update'])->name('roles.permissions.update');
+    });
 });
 
 // Route::group(['middleware' => ['role:loan committee member|loan committee secretary|loan committee chairman|managing committee secretary

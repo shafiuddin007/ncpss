@@ -271,7 +271,7 @@ watch(
                     </div>
                     <div class="flex-1">
                         <Label for="email">Email</Label>
-                        <Input id="email" type="text" required autofocus :tabindex="5" autocomplete="contact"
+                        <Input id="email" type="text" autofocus :tabindex="5" autocomplete="contact"
                             v-model="form.email" placeholder="Email" />
                         <InputError :message="form.errors.email" />
                     </div>
@@ -345,7 +345,7 @@ watch(
                     </div>
                     <div class="flex-1">
                         <Label for="nid">National ID Number</Label>
-                        <Input id="nid" type="text" required autofocus :tabindex="13" v-model="form.nid"
+                        <Input id="nid" type="text" autofocus :tabindex="13" v-model="form.nid"
                             placeholder="National ID Number" />
                         <InputError :message="form.errors.nid" />
                     </div>
@@ -498,7 +498,6 @@ watch(
                         </div>
                     </div>
                 </div>
-
                 <div class="grid gap-6 mt-10">
                     <h2 class="text-lg font-semibold">Upload Images</h2>
                     <div class="grid gap-6">
@@ -532,7 +531,7 @@ watch(
                     <div class="flex gap-6">
                         <div class="flex-1">
                             <Label for="nominee_nid">NID/Birth Certificate Number</Label>
-                            <Input id="nominee_nid" type="text" required autofocus :tabindex="31"
+                            <Input id="nominee_nid" type="text" autofocus :tabindex="31"
                                 v-model="form.nominee_nid" placeholder="NID/Birth Certificate Number" />
                             <InputError :message="form.errors.nominee_nid" />
                         </div>
@@ -558,7 +557,7 @@ watch(
                         </div>
                         <div class="flex-1">
                             <Label for="contact_number">Contact Number</Label>
-                            <Input id="contact_number" type="text" required autofocus :tabindex="34"
+                            <Input id="contact_number" type="text" autofocus :tabindex="34"
                                 v-model="form.contact_number" placeholder="Nominee Contact Number" />
                             <InputError :message="form.errors.contact_number" />
                         </div>
@@ -566,7 +565,7 @@ watch(
                     <div class="grid gap-6">
                         <div class="grid gap-2">
                             <Label for="nominee_address">Nominee Address</Label>
-                            <Input id="nominee_address" type="text" required autofocus :tabindex="35"
+                            <Input id="nominee_address" type="text" autofocus :tabindex="35"
                                 v-model="form.nominee_address" placeholder="Nominee Address" />
                             <InputError :message="form.errors.nominee_address" />
                         </div>
@@ -586,7 +585,7 @@ watch(
                     <div class="grid gap-6">
                         <div class="grid gap-2">
                             <Label for="introducer_name">Introducer Name</Label>
-                            <Input id="introducer_name" type="text" required autofocus :tabindex="37"
+                            <Input id="introducer_name" type="text" autofocus :tabindex="37"
                                 v-model="form.introducer_name" placeholder="Introducer Name" />
                             <InputError :message="form.errors.introducer_name" />
                         </div>
@@ -594,7 +593,7 @@ watch(
                     <div class="grid gap-6">
                         <div class="grid gap-2">
                             <Label for="introducer_signature">Signature</Label>
-                            <Input id="introducer_signature" type="file" required autofocus :tabindex="38"
+                            <Input id="introducer_signature" type="file" autofocus :tabindex="38"
                                 @change="(e: Event) => form.introducer_signature = (e.target as HTMLInputElement).files?.[0] || null" />
                             <InputError :message="form.errors.introducer_signature" />
                         </div>
