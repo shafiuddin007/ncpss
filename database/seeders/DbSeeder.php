@@ -15,11 +15,17 @@ class DbSeeder extends Seeder
     {
         //
         $path = __DIR__.'/sql_file/required.sql';
-        echo __DIR__;
-       
+        // echo __DIR__; // Optional: remove or comment out debug output
+
+        // Disable foreign key checks
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
         DB::unprepared(
             file_get_contents($path)
         );
+
+        // Re-enable foreign key checks
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $this->call([
             ProductSeeder::class,

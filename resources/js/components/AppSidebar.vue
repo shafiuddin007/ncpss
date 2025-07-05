@@ -86,6 +86,14 @@ const mainNavItems: NavItem[] = [
             'admin'
         ],
     },
+    {
+        title: 'Share Account',
+        href: '/share-accounts',
+        icon: LayoutGrid,
+        roles: [
+            'admin'
+        ],
+    },
 ];
 
 const footerNavItems: NavItem[] = [
