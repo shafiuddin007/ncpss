@@ -1,12 +1,24 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
-import { Pencil } from 'lucide-vue-next';
+import { type BreadcrumbItem } from '@/types';
+
+interface Permission {
+    id: number;
+    name: string;
+}
+
+interface Role {
+    id: number;
+    name: string;
+    permissions: Permission[];
+}
 
 defineProps<{
-    roles: Array<any>,
-    permissions: Array<any>
+    roles: Role[],
+    permissions: Permission[]
 }>();
+import { Head, Link } from '@inertiajs/vue3';
+import { Pencil } from 'lucide-vue-next';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Role Permissions', href: '/roles-permissions' },
@@ -47,3 +59,4 @@ const breadcrumbs: BreadcrumbItem[] = [
         </div>
     </AppLayout>
 </template>
+                

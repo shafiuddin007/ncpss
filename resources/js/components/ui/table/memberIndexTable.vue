@@ -5,14 +5,12 @@
       <div class="flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
           <h2 class="text-xl font-bold text-gray-800">{{ title }}</h2>
-          
+
         </div>
         <div class="mt-4 md:mt-0">
-          <button
-            v-if="showAdd"
+          <button v-if="showAdd"
             class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition duration-150 ease-in-out"
-            @click="$emit('add')"
-          >
+            @click="$emit('add')">
             Add Member
           </button>
         </div>
@@ -22,22 +20,21 @@
         <!-- <p class="text-gray-500 mt-1">{{ subtitle }}</p> -->
         <div class="relative flex-grow sm:flex-none sm:w-1/2">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-          <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-        </svg>
+            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+              fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd"
+                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                clip-rule="evenodd" />
+            </svg>
           </div>
-          <input
-        type="text"
-        class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full"
-        placeholder="Search by name, father's/mother's name, NID, or mobile..."
-        v-model="search"
-          >
+          <input type="text" class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full"
+            placeholder="Search by name, father's/mother's name, NID, or mobile..." v-model="search">
         </div>
       </div>
     </div>
 
     <!-- Table -->
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto mx-2 mt-4">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-100">
           <tr>
@@ -46,10 +43,9 @@
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-          <tr
-            v-for="(row, idx) in paginatedRows"
-            :key="row.id || idx"
+          <tr v-for="(row, idx) in paginatedRows" :key="row.id || idx"
             class="hover:bg-blue-50 transition-colors duration-150"
+            @click="row._showDropdown = false"
           >
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center">
@@ -68,7 +64,7 @@
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="text-sm text-gray-900 text-center">{{ row.mother_name }}</div>
             </td>
-             <td class="px-6 py-4 whitespace-nowrap">
+            <td class="px-6 py-4 whitespace-nowrap">
               <div class="text-sm text-gray-900 text-center">{{ row.nid }}</div>
             </td>
             <!-- <td class="px-6 py-4 whitespace-nowrap">
@@ -85,10 +81,62 @@
                 {{ row.status }}
               </span>
             </td> -->
-            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-              <a href="#" class="text-green-600 hover:text-green-900 mr-3" @click.prevent="$emit('view', row)">View</a>
-              <a v-if="showEdit" href="#" class="text-indigo-600 hover:text-indigo-900 mr-3" @click.prevent="$emit('edit', row)">Edit</a>
-              <a v-if="showDelete" href="#" class="text-red-600 hover:text-red-900" @click.prevent="$emit('delete', row)">Delete</a>
+            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium" style="position: relative;">
+              <button class="text-green-600 hover:text-green-900 mr-3" @click.prevent="$emit('view', row)" title="View">
+                <ViewIcon class="h-5 w-5 inline" />
+              </button>
+              <button v-if="showEdit" class="text-indigo-600 hover:text-indigo-900 mr-3"
+                @click.prevent="$emit('edit', row)" title="Edit">
+                <EditIcon class="h-5 w-5 inline" />
+              </button>
+              <button v-if="showDelete" class="text-red-600 hover:text-red-900 mr-3"
+                @click.prevent="$emit('delete', row)" title="Delete">
+                <TrashIcon class="h-5 w-5 inline" />
+              </button>
+              <!-- More options dropdown -->
+              <div class="relative inline-block text-left" style="z-index: 5;">
+                <button
+                  @click.stop="
+                    ensureDropdownReactive(row);
+                    toggleDropdown(idx);
+                    console.log('toggleDropdown called', idx);
+                  "
+                  class="text-gray-500 hover:text-gray-700"
+                  title="More"
+                  type="button"
+                  :aria-expanded="row._showDropdown ? 'true' : 'false'"
+                  :style="row._showDropdown ? 'z-index: 0;' : 'z-index: 10;'"
+                >
+                  <EllipsisVerticalIcon class="h-5 w-5" />
+                </button>
+                <div
+                  v-if="row._showDropdown"
+                  class="origin-top-right absolute right-0 mt-2 w-44 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[1000]"
+                  style="display: block !important;"
+                  @click="if($event.target === $event.currentTarget){ row._showDropdown = false; }"
+                >
+                  <div class="py-1">
+                    <a href="#" @click.prevent="$emit('sell-product', row); row._showDropdown = false"
+                      class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sell Product</a>
+                    <a
+                      :href="route('members.payment', { member: row.id })"
+                      @click="row._showDropdown = false"
+                      class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Payment
+                    </a>
+                    <a
+                      :href="route('members.loan-schedule', { member: row.id })"
+                      @click="row._showDropdown = false"
+                      class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Loan Schedule
+                    </a>
+                    <a href="#" @click.prevent="$emit('view-statement', row); row._showDropdown = false"
+                      class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">View Statement</a>
+                  </div>
+                </div>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -111,26 +159,28 @@
         </div>
         <div>
           <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-            <a href="#" @click.prevent="prevPage" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+            <a href="#" @click.prevent="prevPage"
+              class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
               <span class="sr-only">Previous</span>
-              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                aria-hidden="true">
+                <path fill-rule="evenodd"
+                  d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                  clip-rule="evenodd" />
               </svg>
             </a>
-            <a
-              v-for="page in totalPages"
-              :key="page"
-              href="#"
-              @click.prevent="goToPage(page)"
-              :class="[
-                'relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium',
-                page === currentPage ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100' : 'bg-white text-gray-700 hover:bg-gray-50'
-              ]"
-            >{{ page }}</a>
-            <a href="#" @click.prevent="nextPage" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+            <a v-for="page in totalPages" :key="page" href="#" @click.prevent="goToPage(page)" :class="[
+              'relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium',
+              page === currentPage ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100' : 'bg-white text-gray-700 hover:bg-gray-50'
+            ]">{{ page }}</a>
+            <a href="#" @click.prevent="nextPage"
+              class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
               <span class="sr-only">Next</span>
-              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                aria-hidden="true">
+                <path fill-rule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                  clip-rule="evenodd" />
               </svg>
             </a>
           </nav>
@@ -141,7 +191,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, reactive } from 'vue';
+import { ViewIcon, EditIcon, TrashIcon, EllipsisVerticalIcon } from 'lucide-vue-next';
 
 const props = defineProps<{
   title?: string,
@@ -155,15 +206,35 @@ const props = defineProps<{
   showDelete?: boolean,
 }>();
 
-const emit = defineEmits(['add', 'edit', 'delete', 'search', 'filter', 'sort', 'view']);
+const emit = defineEmits([
+  'add',
+  'edit',
+  'delete',
+  'search',
+  'filter',
+  'sort',
+  'view',
+  'sell-product',
+  'payment',
+  'loan-schedule',
+  'view-statement'
+]);
 
 const search = ref('');
 const selectedDepartment = ref('');
 const currentPage = ref(1);
 
+
+const localRows = ref(props.rows.map(row => ({
+  ...row,
+  _showDropdown: false // Make sure every row has this reactive property
+})));
+
 // Enhanced search: name, father's name, mother's name, NID, mobile
 const filteredRows = computed(() => {
-  let filtered = props.rows;
+  //let filtered = props.rows;
+
+  let filtered = localRows.value;
 
   if (search.value) {
     const s = search.value.toLowerCase();
@@ -200,6 +271,20 @@ function nextPage() {
 }
 function goToPage(page: number) {
   currentPage.value = page;
+}
+
+const toggleDropdown = (idx: number) => {
+  paginatedRows.value.forEach((row, i) => {
+    if (i !== idx) row._showDropdown = false;
+  });
+  paginatedRows.value[idx]._showDropdown = !paginatedRows.value[idx]._showDropdown;
+};
+
+function ensureDropdownReactive(row: any) {
+  if (row._showDropdown === undefined) {
+    // Vue 3 reactivity: make _showDropdown reactive if not present
+    row._showDropdown = false;
+  }
 }
 
 watch([search, selectedDepartment], () => {

@@ -104,4 +104,9 @@ class Loan extends Model
     {
         return $this->morphMany(Application::class, 'model');
     }
+
+    public function loan_schedules()
+    {
+        return $this->hasMany(\App\Models\LoanSchedule::class, 'loan_id');
+    }
 }

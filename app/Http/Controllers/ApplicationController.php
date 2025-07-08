@@ -10,6 +10,8 @@ use App\Enums\ProductType;
 use App\Models\ApprovalHistory;
 use Illuminate\Support\Facades\App;
 use \Illuminate\Support\Facades\Auth;
+use App\Models\Loan;
+use App\Models\LoanSchedule;
 
 class ApplicationController extends Controller
 {
@@ -275,6 +277,14 @@ class ApplicationController extends Controller
             $application->approval_date = now();
             $application->approved_by = optional(Auth::user())->id;
             $application->approved_by_name = Auth::user()->name ?? '';
+
+            // Generate loan schedule if not already generated
+            if ($application->model_type === Loan::class) {
+                $loan = $application->model;
+                if ($loan && $loan->loan_schedules()->count() === 0) {
+                    $this->generateLoanSchedule($loan, $application);
+                }
+            }
         } elseif ($status === ApprovalStatus::REJECTED->value) {
             $application->is_rejected = true;
             $application->rejection_date = now();
@@ -286,6 +296,48 @@ class ApplicationController extends Controller
         $application->updated_by_name = Auth::user()->name ?? '';
         $application->updated_at = now();
         $application->save();
+    }
+
+    // Add this method to the controller:
+    private function generateLoanSchedule($loan, $application)
+    {
+        // Assumes $loan has: amount, interest_rate (annual, percent), term (months), start_date
+        $principal = $loan->loan_amount ?? $loan->amount ?? 0;
+        $rate = $loan->interest_rate ?? 0; // annual rate in percent
+        $term = $loan->loan_term_months ?? $loan->term ?? $loan->total_installment ?? 0; // in months
+        $startDate = $loan->installment_start_date ?? $loan->start_date ?? now();
+
+        // Log the values for debugging
+        \Log::info('Loan Schedule Generation', [
+            'principal' => $principal,
+            'rate' => $rate,
+            'term' => $term,
+            'startDate' => $startDate,
+            'loan_id' => $loan->id ?? null,
+            'application_id' => $application->id ?? null,
+        ]);
+
+        // Prevent division by zero
+        if (!$term || $term <= 0) {
+            return;
+        }
+
+        $monthlyPrincipal = round($principal / $term, 2);
+        $monthlyInterest = round(($principal * ($rate / 100)) / 12, 2);
+
+        for ($i = 1; $i <= $term; $i++) {
+            $dueDate = \Carbon\Carbon::parse($startDate)->addMonths($i);
+            \App\Models\LoanSchedule::create([
+                'loan_id' => $loan->id,
+                'application_id' => $application->id,
+                'installment_number' => $i,
+                'due_date' => $dueDate,
+                'principal' => $monthlyPrincipal,
+                'interest' => $monthlyInterest,
+                'total_payment' => $monthlyPrincipal + $monthlyInterest,
+                'paid' => false,
+            ]);
+        }
     }
 
     /* ===========================================================
