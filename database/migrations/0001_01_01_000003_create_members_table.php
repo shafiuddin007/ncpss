@@ -32,19 +32,19 @@ return new class extends Migration
             $table->string('mobile');   
             $table->string('email')->nullable();
 
-            $table->string('pre_address')->nullable;   
+            $table->string('pre_address')->nullable();   
             $table->integer('pre_division')->nullable();
-            $table->integer('pre_district')->nullable;
-            $table->integer('pre_thana')->nullable;
-            $table->integer('pre_union')->nullable;
-            $table->string('pre_post_code')->nullable;
+            $table->integer('pre_district')->nullable();
+            $table->integer('pre_thana')->nullable();
+            $table->integer('pre_union')->nullable();
+            $table->string('pre_post_code')->nullable();
             
-            $table->string('per_address')->nullable;
-            $table->integer('per_division')->nullable;
-            $table->integer('per_district')->nullable;
-            $table->integer('per_thana')->nullable;
-            $table->integer('per_union')->nullable;
-            $table->string('per_post_code')->nullable;
+            $table->string('per_address')->nullable();
+            $table->integer('per_division')->nullable();
+            $table->integer('per_district')->nullable();
+            $table->integer('per_thana')->nullable();
+            $table->integer('per_union')->nullable();
+            $table->string('per_post_code')->nullable();
            
             
             $table->string('status')->default('pending');
