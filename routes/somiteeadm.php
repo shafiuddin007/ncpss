@@ -12,6 +12,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\Api\GrantorController;
 
 // Route::middleware('auth',)->group(function () {
 Route::group(['middleware' =>
@@ -66,4 +67,5 @@ Route::group(['middleware' =>
 
 Route::get('/divisions/{division}/districts', [DivisionController::class, 'getDistricts'])->name('api.divisions.districts');
 Route::get('/districts/{district}/thanas', [DistrictController::class, 'getThanas'])->name('api.districts.thanas');
+Route::get('/find/{id}/grantor', [GrantorController::class, 'findGrantor'])->name('api.find.grantor');
 

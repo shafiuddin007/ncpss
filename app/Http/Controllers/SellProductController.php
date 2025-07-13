@@ -21,6 +21,7 @@ use App\Enums\ProductType;
 use App\Models\Application;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Loan_slab;
 
 class SellProductController extends Controller
 {
@@ -28,12 +29,36 @@ class SellProductController extends Controller
     public function sellProduct($memberId)
     {
         $member = Member::findOrFail($memberId);
+        $active_loan = Loan::where('member_id', $memberId)
+            ->where('status', Status::APPROVED->value)
+            ->where('is_active', true)
+            ->first(); // fetch the active loan row
+
+           
+        if (!$active_loan) {
+            $previous_loan_count = Loan::where('member_id', $memberId)
+                ->where('status', Status::APPROVED->value)
+                ->where('is_active', false)
+                ->count();
+                if ($previous_loan_count > 0) {
+                    $loan_slab = Loan_slab::where('loan_serial', $previous_loan_count + 1)
+                       ->first();
+                }
+                else {
+                    $loan_slab = Loan_slab::where('loan_serial', '=', 1)
+                       ->first();
+                }
+                
+        }
+
         $products = Product::where('is_active', true)
             ->get(['id', 'name', 'min_balance', 'max_loan_amount', 'interest_rate', 'loan_term_months']);
         return Inertia::render('sell-product/sell-product', [
             'member' => $member,
             'products' => $products,
-            'loan_info' => array('current_share_amount' => '100000', 'share_b4_3m' => '60000', 'previous_loan' => '50000'),
+            'loan_info' => array('current_share_amount' => '100000', 'share_b4_3m' => '4000', 'previous_loan' => '50000'),
+            'active_loan' => $active_loan, // pass the loan object or null
+            'loan_slab' => $loan_slab,
         ]);
     }
 

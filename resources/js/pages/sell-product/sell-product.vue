@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/InputError.vue';
-import { watch, reactive, ref } from 'vue';
+import { watch, reactive, ref, onMounted } from 'vue';
 import ErrorAlertModal from '@/components/ErrorAlertModal.vue';
+import { CirclePlayIcon } from 'lucide-vue-next';
+import axios from 'axios';
 
 // Types
 type Product = {
@@ -29,6 +31,7 @@ type Grantor = {
   member_id: string;
   deposit_amount: string;
   loan_amount: string;
+  name: string;
   // document: File | null;
 };
 
@@ -85,15 +88,19 @@ type FormFields = {
   loan_surety_type: string;
   family_member: string;
   grantors: Grantor[];
+  grantor_member_id: string;
   family_members: FamilyMember[];
   application?: string; // Add this line to allow application-level errors
 };
 
-const props = defineProps<{
-  member: any;
-  products: Product[];
-  loan_info: LoanInfo;
-}>();
+const props = defineProps({
+  member: Object,
+  products: Array,
+  loan_info: Object,
+  active_loan: Object, // will be null or loan object
+  loan_slab: Object, // will be null or loan slab object
+  // previous_loan_count: Number, // IGNORE
+});
 
 
 
@@ -105,9 +112,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 // Steps configuration
 const steps = [
-  { title: 'Product Information', href: '#product-info' },
+  { title: 'Loan', href: '#product-info' },
   { title: 'Income & Expense', href: '#income-expence' },
-  { title: 'Loan Information', href: '#loan-info' },
+  { title: 'Grantor', href: '#loan-info' },
   { title: 'Family Member', href: '#family-member' },
   { title: 'Submit', href: '#submit' },
 ];
@@ -160,6 +167,7 @@ const form = useForm<FormFields>({
   loan_surety_type: '',
   family_member: '',
   grantors: [],
+  grantor_member_id: '',
   family_members: [],
 });
 
@@ -169,18 +177,32 @@ const newGrantor = reactive<Grantor>({
   member_id: '',
   deposit_amount: '',
   loan_amount: '',
+  name: '',
   // document: null,
 });
 
-function addGrantor() {
-  const grantorData = { ...newGrantor };
 
-  if (editingGrantorIndex.value !== null) {
-    form.grantors[editingGrantorIndex.value] = grantorData;
-    editingGrantorIndex.value = null;
+
+async function addGrantor() {
+  const grantorData = { ...newGrantor };
+  if (grantorData.member_id !== '') {
+    try {
+      const response = await axios.get(route('api.find.grantor', { id: grantorData.member_id }));
+      Object.assign(grantorData, response.data);
+      console.log(response.data);
+      form.errors.grantor_member_id = '';
+      form.grantors.push(grantorData);
+    } catch (error) {
+      form.errors.grantor_member_id = 'Something went wrong while fetching grantor info';
+      console.error('Failed to fetch grantor info:', error);
+    }
+
+    
   } else {
-    form.grantors.push(grantorData);
+    console.log(grantorData);
+    form.errors.grantor_member_id = 'Grantor member ID is required';
   }
+  console.log(grantorData);
   clearGrantor();
 }
 
@@ -188,6 +210,7 @@ function clearGrantor() {
   newGrantor.member_id = '';
   newGrantor.deposit_amount = '';
   newGrantor.loan_amount = '';
+  newGrantor.name = '';
   // newGrantor.document = null;
 }
 
@@ -264,91 +287,95 @@ function nextStep() {
   showConfirmationError.value = false;
 
   // Step validation
-  switch (currentStep.value) {
-    case 0:
-      if (!form.product_id) {
-        form.setError('product_id', 'Please select a product');
-        return;
-      }
-      break;
+  // switch (currentStep.value) {
+  //   case 0:
+  //     if (!form.product_id) {
+  //       form.setError('product_id', 'Please select a product');
+  //       return;
+  //     }
+  //     if (!form.loan_amount) {
+  //       form.setError('member_id', 'Member ID is required');
+  //       return;
+  //     }
+  //     break;
 
-    case 1:
-      type IncomeField = keyof Pick<FormFields,
-        'office_address' | 'office_contact' | 'self_income' | 'rent' | 'food_expense'
-      >;
+  //   case 1:
+  //     type IncomeField = keyof Pick<FormFields,
+  //       'office_address' | 'office_contact' | 'self_income' | 'rent' | 'food_expense'
+  //     >;
 
-      const incomeFields: Record<IncomeField, string> = {
-        office_address: 'Please enter your office address',
-        office_contact: 'Please enter your office contact',
-        self_income: 'Please enter your self income',
-        rent: 'Please enter your rent',
-        food_expense: 'Please enter your food expense'
-      };
+  //     const incomeFields: Record<IncomeField, string> = {
+  //       office_address: 'Please enter your office address',
+  //       office_contact: 'Please enter your office contact',
+  //       self_income: 'Please enter your self income',
+  //       rent: 'Please enter your rent',
+  //       food_expense: 'Please enter your food expense'
+  //     };
 
-      let hasError = false;
-      (Object.entries(incomeFields) as Array<[IncomeField, string]>).forEach(([field, message]) => {
-        if (!form[field]) {
-          form.setError(field, message);
-          hasError = true;
-        }
-      });
+  //     let hasError = false;
+  //     (Object.entries(incomeFields) as Array<[IncomeField, string]>).forEach(([field, message]) => {
+  //       if (!form[field]) {
+  //         form.setError(field, message);
+  //         hasError = true;
+  //       }
+  //     });
 
-      if (hasError) return;
-      break;
+  //     if (hasError) return;
+  //     break;
 
-    case 2:
-      type LoanField = keyof Pick<FormFields,
-        'loan_amount' | 'loan_type' | 'loan_purpose' | 'total_installment' |
-        'start_date' | 'loan_surety_type'
-      >;
+  //   case 2:
+  //     type LoanField = keyof Pick<FormFields,
+  //       'loan_amount' | 'loan_type' | 'loan_purpose' | 'total_installment' |
+  //       'start_date' | 'loan_surety_type'
+  //     >;
 
-      const loanFields: Record<LoanField, string> = {
-        loan_amount: 'Please enter the loan amount',
-        loan_type: 'Please select a loan type',
-        loan_purpose: 'Please enter the loan purpose',
-        total_installment: 'Please enter the total installment',
-        start_date: 'Please select the first installment start date',
-        loan_surety_type: 'Please select the loan surety type',
-      };
+  //     const loanFields: Record<LoanField, string> = {
+  //       loan_amount: 'Please enter the loan amount',
+  //       loan_type: 'Please select a loan type',
+  //       loan_purpose: 'Please enter the loan purpose',
+  //       total_installment: 'Please enter the total installment',
+  //       start_date: 'Please select the first installment start date',
+  //       loan_surety_type: 'Please select the loan surety type',
+  //     };
 
-      let hasLoanError = false;
+  //     let hasLoanError = false;
 
-      // Validate required fields
-      (Object.entries(loanFields) as Array<[LoanField, string]>).forEach(([field, message]) => {
-        if (!form[field]) {
-          form.setError(field, message);
-          hasLoanError = true;
-        }
-      });
+  //     // Validate required fields
+  //     (Object.entries(loanFields) as Array<[LoanField, string]>).forEach(([field, message]) => {
+  //       if (!form[field]) {
+  //         form.setError(field, message);
+  //         hasLoanError = true;
+  //       }
+  //     });
 
-      // Validate loan amount
-      if (form.loan_amount) {
-        const loanAmount = parseFloat(form.loan_amount);
-        if (isNaN(loanAmount) || loanAmount <= 0) {
-          form.setError('loan_amount', 'Please enter a valid positive loan amount');
-          hasLoanError = true;
-        }
+  //     // Validate loan amount
+  //     if (form.loan_amount) {
+  //       const loanAmount = parseFloat(form.loan_amount);
+  //       if (isNaN(loanAmount) || loanAmount <= 0) {
+  //         form.setError('loan_amount', 'Please enter a valid positive loan amount');
+  //         hasLoanError = true;
+  //       }
 
-        // Validate against max loan amount
-        if (form.max_loan_amount) {
-          const maxAmount = parseFloat(form.max_loan_amount);
-          if (!isNaN(maxAmount) && loanAmount > maxAmount) {
-            form.setError('loan_amount', `Loan amount cannot exceed ${maxAmount.toLocaleString()}`);
-            hasLoanError = true;
-          }
-        }
-      }
+  //       // Validate against max loan amount
+  //       if (form.max_loan_amount) {
+  //         const maxAmount = parseFloat(form.max_loan_amount);
+  //         if (!isNaN(maxAmount) && loanAmount > maxAmount) {
+  //           form.setError('loan_amount', `Loan amount cannot exceed ${maxAmount.toLocaleString()}`);
+  //           hasLoanError = true;
+  //         }
+  //       }
+  //     }
 
-      if (hasLoanError) return;
-      break;
+  //     if (hasLoanError) return;
+  //     break;
 
-    case 3:
-      if (!form.family_member) {
-        form.setError('family_member', 'Please add number of family member');
-        return;
-      }
-      break;
-  }
+  //   case 3:
+  //     if (!form.family_member) {
+  //       form.setError('family_member', 'Please add number of family member');
+  //       return;
+  //     }
+  //     break;
+  // }
 
   if (currentStep.value < steps.length - 1) {
     currentStep.value++;
@@ -387,24 +414,29 @@ const handleSubmit = async () => {
   }
 };
 
-// Watchers
-watch(
-  () => form.product_id,
-  (newProductId) => {
-    const selected = props.products.find(p => p.id === Number(newProductId));
-    if (selected) {
-      form.min_balance = selected.min_balance !== null ? String(selected.min_balance) : '0';
-      form.max_loan_amount = selected.max_loan_amount !== null ? String(selected.max_loan_amount) : '0';
-      form.interest_rate = selected.interest_rate !== null ? String(selected.interest_rate) : '0';
-      form.loan_term_months = selected.loan_term_months !== null ? String(selected.loan_term_months) : '0';
-    } else {
-      form.min_balance = '';
-      form.max_loan_amount = '';
-      form.interest_rate = '';
-      form.loan_term_months = '';
-    }
+
+
+
+const selectedProduct = ref<Product | null>(null);
+
+onMounted(() => {
+  // Initialize selected product to the first product or a default one
+  selectedProduct.value = props.products.find((p: Product) => p.id === 1) || null;
+
+
+  if (selectedProduct.value) {
+    // form.product_id = String(selectedProduct.value.id); 5400 <= 120000
+    // form.min_balance = selectedProduct.value.min_balance !== null ? String(selectedProduct.value.min_balance) : '0';
+    form.loan_amount = Number(props.loan_info.share_b4_3m) * Number(props.loan_slab.times) <= Number(props.loan_slab.maximum_loan_receivable) ? Number(props.loan_info.share_b4_3m) * Number(props.loan_slab.times) : String(props.loan_slab.maximum_loan_receivable);
+    form.interest_rate = selectedProduct.value.interest_rate !== null ? String(selectedProduct.value.interest_rate) : '0';
+    form.loan_term_months = props.loan_slab.number_of_installment !== null ? String(props.loan_slab.number_of_installment) : '0';
+    // form.loan_term_months = selectedProduct.value.loan_term_months !== null ? String(selectedProduct.value.loan_term_months) : '0';
   }
-);
+});
+
+
+
+
 
 watch(
   [() => form.self_income, () => form.family_income],
@@ -433,6 +465,7 @@ watch(
   }
 );
 
+console.log('Loan Slab:', props.loan_slab);
 function closeModal() {
   form.clearErrors('application');
 }
@@ -443,8 +476,27 @@ function closeModal() {
     <div class="m-20">
       <!-- Error Modal -->
       <ErrorAlertModal :show="!!form.errors.application" :message="form.errors.application" @close="closeModal" />
+      <div v-if="props.active_loan">
+        <h3 class="text-2xl font-semibold text-center">
+          You have active loan.
+        </h3>
+        <p>
+          <Link :href="`/members/${props.member.id}/loan-schedule`">
+          Would you like to see the details of your current loan?
+          </Link>
+        </p>
+        <p>
+          <Link>
+          Would you like to a topup your current loan?
+          </Link>
+        </p>
+        <Link :href="route('member.list')"
+          class="inline-block mt-4 px-4 py-2 bg-blue-600 text-white rounded print:hidden">
+        Back to Members
+        </Link>
+      </div>
 
-      <form @submit.prevent="handleSubmit" class="flex flex-col gap-6">
+      <form v-if="!props.active_loan" @submit.prevent="handleSubmit" class="flex flex-col gap-6">
         <!-- Progress Indicator -->
         <div class="flex flex-col md:flex-row justify-between items-center mb-8 space-y-4 md:space-y-0">
           <div v-for="(step, index) in steps" :key="index" class="flex items-center">
@@ -463,9 +515,10 @@ function closeModal() {
         <!-- Step 1: Product Information -->
         <div v-show="currentStep === 0" id="product-info"
           class="step-content grid gap-6 shadow-md p-6 border rounded-lg bg-gray-100">
-          <h2 class="text-2xl font-semibold text-center">Product Information</h2>
+          <!-- <h2 class="text-2xl font-semibold text-center">Product Information</h2> -->
+
           <div class="flex gap-6">
-            <div class="flex-1">
+            <!-- <div class="flex-1">
               <Label for="product_id">Select Product</Label>
               <select id="product_id" v-model="form.product_id" class="w-full border rounded p-2" required>
                 <option value="" disabled>Select a product</option>
@@ -474,20 +527,18 @@ function closeModal() {
                 </option>
               </select>
               <InputError :message="form.errors.product_id" />
-            </div>
-            <div class="flex-1">
+            </div> -->
+            <!-- <div class="flex-1">
               <Label for="min_balance">Min Amount</Label>
               <Input id="min_balance" v-model="form.min_balance" type="number" step="0.01" />
               <InputError :message="form.errors.min_balance" />
-            </div>
+            </div> -->
             <div class="flex-1">
-              <Label for="max_loan_amount">Max Amount</Label>
-              <Input id="max_loan_amount" v-model="form.max_loan_amount" type="number" step="0.01" />
-              <InputError :message="form.errors.max_loan_amount" />
+              <Label for="loan_amount">Loan Amount</Label>
+              <Input id="loan_amount" v-model="form.loan_amount" type="number" step="0.01" />
+              <InputError :message="form.errors.loan_amount" />
             </div>
-          </div>
 
-          <div class="flex gap-6">
             <div class="flex-1">
               <Label for="interest_rate">Interest Rate</Label>
               <Input id="interest_rate" v-model="form.interest_rate" type="number" step="0.01" />
@@ -498,7 +549,82 @@ function closeModal() {
               <Input id="loan_term_months" v-model="form.loan_term_months" type="number" />
               <InputError :message="form.errors.loan_term_months" />
             </div>
+
           </div>
+
+
+
+          <div class="flex gap-6">
+            <div class="flex-1">
+              <Label for="loan_purpose">Loan Purpose</Label>
+              <Input id="loan_purpose" v-model="form.loan_purpose" />
+              <InputError :message="form.errors.loan_purpose" />
+            </div>
+          </div>
+
+          <div class="flex gap-6">
+            <div class="flex-1">
+              <Label for="loan_type">Loan Type</Label>
+              <div class="flex-1 border rounded-md p-4 w-full bg-white">
+
+                <div class="flex items-start">
+                  <Label for="general"
+                    class="mr-4 flex bg-gray-200 text-gray-700 rounded-md px-3 py-2 my-3  hover:bg-indigo-300 cursor-pointer">
+                    <input id="general" type="radio" value="General" v-model="form.loan_type" class="mr-2 mt-1"
+                      :tabindex="26" />
+                    <i class="pl-2">General</i>
+                  </Label>
+                  <Label for="is_urgent"
+                    class="mr-4 flex bg-gray-200 text-gray-700 rounded-md px-3 py-2 my-3  hover:bg-indigo-300 cursor-pointer">
+                    <input id="is_urgent" type="radio" value="Urgent" v-model="form.loan_type" class="mr-2 mt-1"
+                      :tabindex="26" />
+                    <i class="pl-2"> Urgent</i>
+                  </Label>
+                  <Label for="top_up"
+                    class="mr-4 flex bg-gray-200 text-gray-700 rounded-md px-3 py-2 my-3  hover:bg-indigo-300 cursor-pointer">
+                    <input id="top_up" type="radio" value="TopUp" v-model="form.loan_type" class="mr-2 mt-1"
+                      :tabindex="26" />
+                    <i class="pl-2">Top Up</i>
+                  </Label>
+
+                  <Label for="others"
+                    class="mr-4 flex bg-gray-200 text-gray-700 rounded-md px-3 py-2 my-3  hover:bg-indigo-300 cursor-pointer">
+                    <input id="others" value="Others" type="radio" v-model="form.loan_type" class="mr-2 mt-1"
+                      :tabindex="26" />
+                    <i class="pl-2">Others</i>
+                  </Label>
+                </div>
+                <InputError :message="form.errors.loan_type" />
+                <div v-if="form.loan_type === 'Urgent'" class="grid gap-6 mt-4 bg-gray-100 p-4 rounded-md">
+                  <div class="grid gap-2">
+                    <Label for="urgent_fee">Urgent Fee Amount</Label>
+                    <Input id="urgent_fee" type="text" v-model="form.urgent_fee" placeholder="Urgent Fee Amount"
+                      :tabindex="27" />
+                    <InputError :message="form.errors.urgent_fee" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex gap-6">
+            <div class="flex-1">
+              <Label for="other_loan_amount">Other Loan Amount</Label>
+              <Input id="other_loan_amount" v-model="form.other_loan_amount" type="number" step="0.01" />
+              <InputError :message="form.errors.other_loan_amount" />
+            </div>
+            <div class="flex-1">
+              <Label for="other_loan_installment">Other Loan Installment</Label>
+              <Input id="other_loan_installment" v-model="form.other_loan_installment" type="number" step="0.01" />
+              <InputError :message="form.errors.other_loan_installment" />
+            </div>
+            <div class="flex-1">
+              <Label for="other_loan_remaining">Other Loan Remaining</Label>
+              <Input id="other_loan_remaining" v-model="form.other_loan_remaining" type="number" step="0.01" />
+              <InputError :message="form.errors.other_loan_remaining" />
+            </div>
+          </div>
+
         </div>
 
         <!-- Step 2: Income & Expense -->
@@ -587,12 +713,12 @@ function closeModal() {
           </div>
         </div>
 
-        <!-- Step 3: Loan Information -->
+        <!-- Step 3: Grantor -->
         <div v-show="currentStep === 2" id="loan-info"
           class="step-content grid gap-6 shadow-md p-6 border rounded-lg bg-gray-100">
-          <h2 class="text-2xl font-semibold text-center">Loan Information</h2>
+          <!-- <h2 class="text-2xl font-semibold text-center">Grantor</h2> -->
 
-          <div class="grid gap-6 mt-10">
+          <!-- <div class="grid gap-6 mt-10">
             <div class="flex gap-6">
               <div class="relative cursor-pointer dark:text-white flex-1 ">
                 <span
@@ -642,9 +768,9 @@ function closeModal() {
                 </div>
               </div>
             </div>
-          </div>
+          </div> -->
 
-          <div class="grid gap-6 mt-10">
+          <!-- <div class="grid gap-6 mt-10">
             <h2 class="text-lg font-semibold">Applied Loan Information</h2>
             <div class="flex gap-6">
               <div class="flex-1">
@@ -660,61 +786,11 @@ function closeModal() {
               </div>
             </div>
 
-            <Label for="loan_type">Loan Type</Label>
-            <div class="flex-1 border rounded-md p-4 w-full bg-white">
+            
 
-              <div class="flex items-start">
-                <Label for="general"
-                  class="mr-4 flex bg-gray-200 text-gray-700 rounded-md px-3 py-2 my-3  hover:bg-indigo-300 cursor-pointer">
-                  <input id="general" type="radio" value="General" v-model="form.loan_type" class="mr-2 mt-1"
-                    :tabindex="26" />
-                  <i class="pl-2">General</i>
-                </Label>
-                <Label for="is_urgent"
-                  class="mr-4 flex bg-gray-200 text-gray-700 rounded-md px-3 py-2 my-3  hover:bg-indigo-300 cursor-pointer">
-                  <input id="is_urgent" type="radio" value="Urgent" v-model="form.loan_type" class="mr-2 mt-1"
-                    :tabindex="26" />
-                  <i class="pl-2"> Urgent</i>
-                </Label>
-                <Label for="top_up"
-                  class="mr-4 flex bg-gray-200 text-gray-700 rounded-md px-3 py-2 my-3  hover:bg-indigo-300 cursor-pointer">
-                  <input id="top_up" type="radio" value="TopUp" v-model="form.loan_type" class="mr-2 mt-1"
-                    :tabindex="26" />
-                  <i class="pl-2">Top Up</i>
-                </Label>
+          </div> -->
 
-                <Label for="others"
-                  class="mr-4 flex bg-gray-200 text-gray-700 rounded-md px-3 py-2 my-3  hover:bg-indigo-300 cursor-pointer">
-                  <input id="others" value="Others" type="radio" v-model="form.loan_type" class="mr-2 mt-1"
-                    :tabindex="26" />
-                  <i class="pl-2">Others</i>
-                </Label>
-              </div>
-              <InputError :message="form.errors.loan_type" />
-              <div v-if="form.loan_type === 'Urgent'" class="grid gap-6 mt-4 bg-gray-100 p-4 rounded-md">
-                <div class="grid gap-2">
-                  <Label for="urgent_fee">Urgent Fee Amount</Label>
-                  <Input id="urgent_fee" type="text" v-model="form.urgent_fee" placeholder="Urgent Fee Amount"
-                    :tabindex="27" />
-                  <InputError :message="form.errors.urgent_fee" />
-                </div>
-              </div>
-            </div>
-            <div class="flex gap-6">
-              <div class="flex-1">
-                <Label for="total_installment">Total Installment</Label>
-                <Input id="total_installment" v-model="form.total_installment" type="number" />
-                <InputError :message="form.errors.total_installment" />
-              </div>
-              <div class="flex-1">
-                <Label for="start_date">First Installment Start Date</Label>
-                <Input id="start_date" v-model="form.start_date" type="date" />
-                <InputError :message="form.errors.start_date" />
-              </div>
-            </div>
-          </div>
-
-          <div class="grid gap-6 mt-10">
+          <!-- <div class="grid gap-6 mt-10">
             <h2 class="text-lg font-semibold">Other Loan Information</h2>
             <div class="flex gap-6">
               <div class="flex-1">
@@ -733,12 +809,12 @@ function closeModal() {
                 <InputError :message="form.errors.other_loan_remaining" />
               </div>
             </div>
-          </div>
+          </div> -->
 
-          <div class="grid gap-6 mt-10">
-            <h2 class="text-lg font-semibold">Details Of Loan Collateral</h2>
+          <div class="grid gap-6 mt-5">
+            <h2 class="text-lg font-semibold">Add Grantor</h2>
             <div class="flex-1 border rounded-md p-4 w-full bg-white">
-              <div class="flex gap-6">
+              <!-- <div class="flex gap-6">
                 <div class="flex-1">
                   <div class="flex items-center gap-4 mt-2">
                     <Label for="self_deposit"
@@ -756,28 +832,34 @@ function closeModal() {
                     {{ form.errors.loan_surety_type }}
                   </p>
                 </div>
-              </div>
-              <div v-if="form.loan_surety_type === 'grantor'" class="mt-8 space-y-6">
-
+              </div> -->
+              <!-- <div v-if="form.loan_surety_type === 'grantor'" class="mt-8 space-y-6"> -->
+              <div class="mt-8 space-y-6">
                 <!-- Grantor Input Form -->
-                <div class="bg-gray-100 p-6 rounded-xl shadow-md border border-gray-200 space-y-4">
-                  <h2 class="text-xl font-semibold text-gray-800">Add Grantor</h2>
+                <!-- <div class="bg-gray-100  rounded-xl shadow-md border border-gray-200 space-y-4"> -->
 
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <Label for="grantor_member_id">Grantor Member ID</Label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label for="grantor_member_id">Grantor Member ID</Label>
+                    <div class="flex items-center space-x-2">
                       <Input id="grantor_member_id" v-model="newGrantor.member_id" placeholder="Enter member ID" />
+                      <CirclePlayIcon class="h-5 w-5 text-blue-500 hover:text-red-700 cursor-pointer"
+                        @click="addGrantor" />
+
                     </div>
-                    <div>
-                      <Label for="grantor_deposit_amount">NPCSS Deposite Amount</Label>
-                      <Input id="grantor_deposit_amount" v-model="newGrantor.deposit_amount"
-                        placeholder="Enter amount" />
-                    </div>
-                    <div>
-                      <Label for="grantor_loan_amount">NPCSS Loan Amount (if any)</Label>
-                      <Input id="grantor_loan_amount" v-model="newGrantor.loan_amount" placeholder="Enter amount" />
-                    </div>
-                    <!-- <div>
+                    <InputError :message="form.errors.grantor_member_id" />
+                  </div>
+
+
+                  <!-- <div>
+                    <Label for="grantor_deposit_amount">Deposit Amount</Label>
+                    <Input id="grantor_deposit_amount" v-model="newGrantor.deposit_amount" placeholder="Enter amount" />
+                  </div>
+                  <div>
+                    <Label for="grantor_loan_amount">Loan Amount (if any)</Label>
+                    <Input id="grantor_loan_amount" v-model="newGrantor.loan_amount" placeholder="Enter amount" />
+                  </div> -->
+                  <!-- <div>
                                             <Label for="grantor_signeture">Grantor Signature</Label>
                                             <input id="grantor_signeture" type="file" accept="image/*,application/pdf"
                                                 @change="e => {
@@ -786,56 +868,56 @@ function closeModal() {
                                                 }"
                                                 class="block w-full text-sm text-gray-700 border border-gray-300 rounded-md shadow-sm p-2 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
                                         </div> -->
-                  </div>
+                </div>
 
-                  <div class="flex justify-end gap-2">
-                    <Button type="button" variant="outline" @click="clearGrantor">
-                      Clear
-                    </Button>
-                    <Button type="button" @click="addGrantor">
-                      {{ editingGrantorIndex !== null ? 'Update Grantor' : 'Add Grantor' }}
-                    </Button>
-                  </div>
-                  <!-- Grantors Table -->
-                  <div v-if="form.grantors.length" class="mt-6">
-                    <h3 class="text-lg font-semibold mb-3 text-gray-800">Grantor List</h3>
-                    <div class="overflow-x-auto rounded-xl border border-gray-200">
-                      <table class="min-w-full divide-y divide-gray-200 text-sm text-gray-700">
-                        <thead class="bg-gray-200 text-xs uppercase text-gray-600">
-                          <tr>
-                            <th class="px-4 py-3 text-center">Member ID</th>
-                            <th class="px-4 py-3 text-center">Deposit Amount</th>
-                            <th class="px-4 py-3 text-center">Loan Amount</th>
-                            <!-- <th class="px-4 py-3 text-center">Document</th> -->
-                            <th class="px-4 py-3 text-center">Action</th>
-                          </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100 bg-white">
-                          <tr v-for="(g, idx) in form.grantors" :key="idx" class="hover:bg-gray-50">
-                            <td class="px-4 py-2 text-center">{{ g.member_id }}</td>
-                            <td class="px-4 py-2 text-center">{{ g.deposit_amount }}</td>
-                            <td class="px-4 py-2 text-center">{{ g.loan_amount }}</td>
-                            <!-- <td class="px-4 py-2 text-center">
+                <!-- <div class="flex justify-end gap-2">
+                  <Button type="button" variant="outline" @click="clearGrantor">
+                    Clear
+                  </Button>
+                  <Button type="button" @click="addGrantor">
+                    {{ editingGrantorIndex !== null ? 'Update Grantor' : 'Add Grantor' }}
+                  </Button>
+                </div> -->
+                <!-- Grantors Table -->
+                <div v-if="form.grantors.length" class="mt-6">
+                  <h3 class="text-lg font-semibold mb-3 text-gray-800">Grantor List</h3>
+                  <div class="overflow-x-auto rounded-xl border border-gray-200">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm text-gray-700">
+                      <thead class="bg-gray-200 text-xs uppercase text-gray-600">
+                        <tr>
+                          <th class="px-4 py-3 text-center">Member ID</th>
+                          <th class="px-4 py-3 text-center">Deposit Amount</th>
+                          <th class="px-4 py-3 text-center">Loan Amount</th>
+                          <!-- <th class="px-4 py-3 text-center">Document</th> -->
+                          <th class="px-4 py-3 text-center">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-gray-100 bg-white">
+                        <tr v-for="(g, idx) in form.grantors" :key="idx" class="hover:bg-gray-50">
+                          <td class="px-4 py-2 text-center">{{ g.name }} <br/> ({{ g.member_id }})</td>
+                          <td class="px-4 py-2 text-center">{{ g.name }}</td>
+                          <td class="px-4 py-2 text-center">{{ g.loan_amount }}</td>
+                          <!-- <td class="px-4 py-2 text-center">
                                                             <span v-if="g.document"
                                                                 class="text-blue-600 underline cursor-pointer">
                                                                 {{ g.document.name }}
                                                             </span>
                                                             <span v-else class="text-gray-400">-</span>
                                                         </td> -->
-                            <td class="px-4 py-2 flex justify-center gap-2">
-                              <Button type="button" variant="secondary" size="sm" @click="editGrantor(idx)">
-                                Edit
-                              </Button>
-                              <Button type="button" variant="destructive" size="sm" @click="removeGrantor(idx)">
-                                Delete
-                              </Button>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
+                          <td class="px-4 py-2 flex justify-center gap-2">
+                            <Button type="button" variant="secondary" size="sm" @click="editGrantor(idx)">
+                              Edit
+                            </Button>
+                            <Button type="button" variant="destructive" size="sm" @click="removeGrantor(idx)">
+                              Delete
+                            </Button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
+
               </div>
 
               <div v-if="form.loan_surety_type === 'self_deposit'" class="flex gap-6 mt-4 bg-gray-100 p-4 rounded-md">
