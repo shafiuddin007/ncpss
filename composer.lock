@@ -7093,6 +7093,7 @@
         },
         {
             "name": "phpunit/phpunit",
+<<<<<<< HEAD
             "version": "11.5.26",
             "source": {
                 "type": "git",
@@ -7103,6 +7104,18 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/4ad8fe263a0b55b54a8028c38a18e3c5bef312e0",
                 "reference": "4ad8fe263a0b55b54a8028c38a18e3c5bef312e0",
+=======
+            "version": "11.5.25",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sebastianbergmann/phpunit.git",
+                "reference": "864ab32b3ff52058f917c5b19b3cef821e4a4f1b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/864ab32b3ff52058f917c5b19b3cef821e4a4f1b",
+                "reference": "864ab32b3ff52058f917c5b19b3cef821e4a4f1b",
+>>>>>>> origin/Add-Member
                 "shasum": ""
             },
             "require": {
@@ -7174,7 +7187,11 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
                 "security": "https://github.com/sebastianbergmann/phpunit/security/policy",
+<<<<<<< HEAD
                 "source": "https://github.com/sebastianbergmann/phpunit/tree/11.5.26"
+=======
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/11.5.25"
+>>>>>>> origin/Add-Member
             },
             "funding": [
                 {
@@ -7198,7 +7215,11 @@
                     "type": "tidelift"
                 }
             ],
+<<<<<<< HEAD
             "time": "2025-07-04T05:58:21+00:00"
+=======
+            "time": "2025-06-27T04:36:07+00:00"
+>>>>>>> origin/Add-Member
         },
         {
             "name": "sebastian/cli-parser",

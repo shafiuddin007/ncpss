@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import DataTable from '@/components/ui/table/ApplicationDataTable.vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
+import { Eye, History, CheckCircle2 } from 'lucide-vue-next';
 
 const props = defineProps<{
   applications: any,
@@ -126,19 +127,27 @@ async function submitAction() {
       formData.append('document', actionDocument.value);
     }
 
+    // Ensure CSRF token is present and up-to-date
+    let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (!csrfToken) {
+      // Try to fetch CSRF token if not present
+      const res = await fetch('/sanctum/csrf-cookie', { credentials: 'same-origin' });
+      csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    }
+
     const response = await fetch(`/applications/${actionApp.value.id}/approval-action`, {
       method: 'POST',
       headers: {
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        'X-CSRF-TOKEN': csrfToken || '',
       },
       body: formData,
+      credentials: 'same-origin', // Ensure cookies are sent
     });
 
     if (!response.ok) {
       throw new Error('Failed to submit action');
     }
 
-    // Refresh the page or update the application status in the table
     window.location.reload();
   } catch (error) {
     actionError.value = error instanceof Error ? error.message : 'An error occurred';
@@ -149,13 +158,18 @@ async function submitAction() {
 </script>
 
 <template>
-
   <Head title="Applications" />
   <AppLayout :breadcrumbs="breadcrumbs">
     <div>
-      <DataTable title="Applications" subtitle="List of all applications" :total="pagination.total"
-        :pageStart="pagination.from" :pageEnd="pagination.to" :searchPlaceholder="'Search applications...'"
-        v-model:search="search">
+      <DataTable
+        title="Applications"
+        subtitle="List of all applications"
+        :total="pagination.total"
+        :pageStart="pagination.from"
+        :pageEnd="pagination.to"
+        :searchPlaceholder="'Search applications...'"
+        v-model:search="search"
+      >
         <!-- <template #header-action>
           <Link href="/applications/create" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition duration-150 ease-in-out">
             Add Application
@@ -188,6 +202,7 @@ async function submitAction() {
         <template #tbody>
           <tr v-for="app in pagination.data" :key="app.id">
             <td class="border px-2 py-1 text-center">{{ app.id }}</td>
+            {{ console.log('userRole:', userRole, 'app.model:', app) }}
             <td class="border px-2 py-1 text-center">{{ app.application_number }}</td>
             <td class="border px-2 py-1 text-center">
               {{ app.model_type === 'App\\Models\\Loan' ? 'Loan' : app.model_type }}
@@ -210,15 +225,26 @@ async function submitAction() {
             </td>
             <td class="border px-2 py-1 capitalize text-center">{{ app.role }}</td>
             <td class="border px-2 py-1">
-              <div class="flex justify-center gap-4">
-                <Link :href="`/applications/${app.id}/show`" class="text-green-600">Details</Link>
-                <button @click="openHistoryModal(app)" class="text-blue-600 cursor-pointer">Approval History</button>
+              <div class="flex justify-start gap-4">
+                <Link :href="`/applications/${app.id}/show`" class="text-green-600" title="Details">
+                  <Eye class="w-5 h-5" />
+                </Link>
+                <button @click="openHistoryModal(app)" class="text-blue-600 cursor-pointer" title="Approval History">
+                  <History class="w-5 h-5" />
+                </button>
                 <button
-                  v-if="userRole === app.role"
+                  v-if="(
+                    (userRole === 'loan committee member' && app.status === 'pending' && app.approval_step === 1) ||
+                    (userRole === 'loan committee secretary' && app.status === 'pending' && app.approval_step === 2) ||
+                    (userRole === 'loan committee chairman' && app.status === 'pending' && app.approval_step === 3) ||
+                    (userRole === 'managing committee secretary' && app.status === 'pending' && app.approval_step === 4) ||
+                    (userRole === 'admin')
+                  )"
                   @click="openActionModal(app)"
                   class="text-red-600 cursor-pointer"
+                  title="Action"
                 >
-                  Action
+                  <CheckCircle2 class="w-5 h-5" />
                 </button>
               </div>
             </td>
@@ -368,7 +394,10 @@ async function submitAction() {
             >
               <option value="" disabled selected>Select your decision</option>
               <option 
-                v-for="option in statusOptions" 
+                v-for="option in statusOptions.filter(opt => 
+                  opt.value !== 'draft' && 
+                  (opt.value !== 'approved' || userRole === 'managing committee secretary')
+                )"
                 :key="option.value" 
                 :value="option.value"
                 class="capitalize"
@@ -409,7 +438,7 @@ async function submitAction() {
                 </div>
                 <input 
                   type="file" 
-                  @change="e => actionDocument = e.target.files?.[0] || null" 
+                  @change="e => actionDocument = (e.target as HTMLInputElement).files?.[0] || null" 
                   class="hidden" 
                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                 />

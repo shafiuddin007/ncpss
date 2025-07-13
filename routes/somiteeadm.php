@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\MemberController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\Api\GrantorController;
 
 // Route::middleware('auth',)->group(function () {
 Route::group(['middleware' =>
@@ -40,6 +42,13 @@ Route::group(['middleware' =>
 
     Route::get('realationships', [RelationshipController::class, 'list'])->name('relationship.list');
 
+    // Loan repayment routes
+    Route::get('/members/{member}/payment', [PaymentController::class, 'loanRepayment'])->name('members.payment');
+    Route::post('/loan-schedules/{loanSchedule}/payment', [PaymentController::class, 'loanSchedulePayment'])->name('loan-schedules.payment');
+    Route::get('/members/{member}/payment-confirmation/{loanSchedule}', [PaymentController::class, 'paymentConfirmation'])->name('payment.confirmation');
+    Route::get('/members/{member}/loan-schedule', [PaymentController::class, 'showLoanSchedule'])->name('members.loan-schedule');
+
+
     // User management routes (admin only)
     Route::middleware(['role:admin'])->group(function () {
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -56,16 +65,7 @@ Route::group(['middleware' =>
     });
 });
 
-// Route::group(['middleware' => ['role:loan committee member|loan committee secretary|loan committee chairman|managing committee secretary
-// ']], function () {  
-//     Route::get('/members', [MemberController::class, 'list'])->name('member.list');    
-//     Route::get('/members/{id}', [MemberController::class, 'show'])->name('members.show');
-
-//     Route::get('/applications', [ApplicationController::class, 'index'])->name('applications.index');
-//     Route::get('/applications/{application}/show', [ApplicationController::class, 'show'])->name('applications.show');
-//     Route::get('/applications/{application}/approval-history', [ApplicationController::class, 'approvalHistory'])->name('applications.approval-history');
-//     Route::post('/applications/{application}/approval-action', [ApplicationController::class, 'approvalAction'])->name('applications.approval-action');
-// });
-
 Route::get('/divisions/{division}/districts', [DivisionController::class, 'getDistricts'])->name('api.divisions.districts');
 Route::get('/districts/{district}/thanas', [DistrictController::class, 'getThanas'])->name('api.districts.thanas');
+Route::get('/find/{id}/grantor', [GrantorController::class, 'findGrantor'])->name('api.find.grantor');
+

@@ -2,6 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue'; // <-- Use your main layout, not AppSidebar.vue
 import { Head, useForm } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
+import { type BreadcrumbItem } from '@/types';
 
 
 const props = defineProps<{

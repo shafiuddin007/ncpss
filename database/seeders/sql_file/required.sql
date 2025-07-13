@@ -874,29 +874,45 @@ INSERT INTO `thanas` (`id`, `thana_name_bn`, `thana_name_en`, `is_active`, `is_d
 	(519, 'কানাইঘাট', 'Kanaighat', 1, 0, '2024-09-09 18:00:00', '2024-09-09 18:00:00', 64),
 	(520, 'ওসমানী নগর', 'Osmani Nagar', 1, 0, '2024-09-09 18:00:00', '2024-09-09 18:00:00', 64);
 
--- SET FOREIGN_KEY_CHECKS = 0;
+SET FOREIGN_KEY_CHECKS = 0;
+INSERT INTO `permissions` (`id`, `name`, `guard_name`, `created_at`, `updated_at`) VALUES
+	(1, 'dashboard', 'web', '2025-06-14 17:08:17', '2025-06-14 17:08:17'),
+	(2, 'member', 'web', '2025-06-14 17:08:18', '2025-06-14 17:08:18'),
+	(3, 'product', 'web', '2025-06-14 17:08:18', '2025-06-14 17:08:18'),
+	(4, 'application', 'web', '2025-06-14 17:08:18', '2025-06-14 17:08:18'),
+	(5, 'users', 'web', '2025-06-25 11:30:48', '2025-06-25 11:30:52');
 
--- INSERT INTO `permissions` (`id`, `name`, `guard_name`, `created_at`, `updated_at`) VALUES
--- 	(1, 'dashboard', 'web', '2025-06-14 17:08:17', '2025-06-14 17:08:17'),
--- 	(2, 'member', 'web', '2025-06-14 17:08:18', '2025-06-14 17:08:18'),
--- 	(3, 'product', 'web', '2025-06-14 17:08:18', '2025-06-14 17:08:18'),
--- 	(4, 'application', 'web', '2025-06-14 17:08:18', '2025-06-14 17:08:18'),
--- 	(5, 'users', 'web', '2025-06-25 11:30:48', '2025-06-25 11:30:52');
+
+
+
+INSERT INTO `roles` (`id`, `name`, `guard_name`, `created_at`, `updated_at`) VALUES
+	(1, 'admin', 'web', '2025-06-14 17:08:17', '2025-06-14 17:08:17');
 	
 
--- INSERT INTO `roles` (`id`, `name`, `guard_name`, `created_at`, `updated_at`) VALUES
--- 	(1, 'admin', 'web', '2025-06-14 17:08:17', '2025-06-14 17:08:17');
+INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
+	(1, 1),
+	(2, 1),
+	(3, 1),
+	(4, 1),
+	(5, 1);
 	
 
--- INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
--- 	(1, 1),
--- 	(2, 1),
--- 	(3, 1),
--- 	(4, 1),
--- 	(5, 1);
-	
+INSERT INTO `model_has_roles` (`role_id`, `model_type`, `model_id`) VALUES
+	(1, 'App\\Models\\User', 1);
 
--- INSERT INTO `model_has_roles` (`role_id`, `model_type`, `model_id`) VALUES
--- 	(1, 'App\\Models\\User', 1);
 
--- SET FOREIGN_KEY_CHECKS = 1;
+
+
+
+INSERT INTO `somitee`.`loan_slabs` (`loan_serial`, `maximum_loan_receivable`, `times`, `number_of_installment`, `created_at`, `updated_at`) VALUES ('1', '50000', '10', '36', '2025-07-08 20:31:51', '2025-07-08 20:31:54');
+INSERT INTO `somitee`.`loan_slabs` (`loan_serial`, `maximum_loan_receivable`, `times`, `number_of_installment`, `created_at`, `updated_at`) VALUES ('2', '80000', '10', '36', '2025-07-08 20:31:51', '2025-07-08 20:31:54');
+INSERT INTO `somitee`.`loan_slabs` (`loan_serial`, `maximum_loan_receivable`, `times`, `number_of_installment`, `created_at`, `updated_at`) VALUES ('3', '120000', '9', '36', '2025-07-08 20:31:51', '2025-07-08 20:31:54');
+INSERT INTO `somitee`.`loan_slabs` (`loan_serial`, `maximum_loan_receivable`, `times`, `number_of_installment`, `created_at`, `updated_at`) VALUES ('4', '150000', '9', '48', '2025-07-08 20:31:51', '2025-07-08 20:31:54');
+INSERT INTO `somitee`.`loan_slabs` (`loan_serial`, `maximum_loan_receivable`, `times`, `number_of_installment`, `created_at`, `updated_at`) VALUES ('5', '200000', '9', '48', '2025-07-08 20:31:51', '2025-07-08 20:31:54');
+INSERT INTO `somitee`.`loan_slabs` (`loan_serial`, `maximum_loan_receivable`, `times`, `number_of_installment`, `created_at`, `updated_at`) VALUES ('6', '250000', '8', '48', '2025-07-08 20:31:51', '2025-07-08 20:31:54');
+INSERT INTO `somitee`.`loan_slabs` (`loan_serial`, `maximum_loan_receivable`, `times`, `number_of_installment`, `created_at`, `updated_at`) VALUES ('7', '300000', '8', '60', '2025-07-08 20:31:51', '2025-07-08 20:31:54');
+INSERT INTO `somitee`.`loan_slabs` (`loan_serial`, `maximum_loan_receivable`, `times`, `number_of_installment`, `created_at`, `updated_at`) VALUES ('8', '350000', '8', '60', '2025-07-08 20:31:51', '2025-07-08 20:31:54');
+INSERT INTO `somitee`.`loan_slabs` (`loan_serial`, `maximum_loan_receivable`, `times`, `number_of_installment`, `created_at`, `updated_at`) VALUES ('9', '400000', '7', '72', '2025-07-08 20:31:51', '2025-07-08 20:31:54');
+INSERT INTO `somitee`.`loan_slabs` (`loan_serial`, `maximum_loan_receivable`, `times`, `number_of_installment`, `created_at`, `updated_at`) VALUES ('10', '500000', '7', '84', '2025-07-08 20:31:51', '2025-07-08 20:31:54');
+
+SET FOREIGN_KEY_CHECKS = 1;
