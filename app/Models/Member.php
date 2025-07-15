@@ -60,6 +60,7 @@ class Member extends Model
         'perDivision',
         'perDistrict',
         'perThana',
+        'grantor',
     ];
 
     protected $appends = ['photo_url'];
@@ -93,6 +94,14 @@ class Member extends Model
     public function country()
     {
         return $this->belongsTo(Country::class, 'nationality', 'id'); // Assuming 'nationality' is the foreign key
+    }
+
+    /**
+     * Define the relationship with the Garantor model.
+     */
+    public function grantor()
+    {
+        return $this->belongsTo(Grantor::class, 'id', 'grantor_member_id'); // Assuming 'grantor_id' is the foreign key in the Guarantor model
     }
 
     /**

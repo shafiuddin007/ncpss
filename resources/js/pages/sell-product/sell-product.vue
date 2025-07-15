@@ -187,7 +187,11 @@ async function addGrantor() {
   const grantorData = { ...newGrantor };
   if (grantorData.member_id !== '') {
     try {
-      const response = await axios.get(route('api.find.grantor', { id: grantorData.member_id }));
+      const response = await axios.get(route('api.find.grantor', { id: grantorData.member_id }), {
+        params: {
+          applicant_id: props.member.id, // Pass the applicant ID to the API
+        },
+      });
       Object.assign(grantorData, response.data);
       console.log(response.data);
       form.errors.grantor_member_id = '';

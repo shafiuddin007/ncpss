@@ -134,6 +134,13 @@
                     </a>
                     <a href="#" @click.prevent="$emit('view-statement', row); row._showDropdown = false"
                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">View Statement</a>
+                    <a
+                      :href="route('share-accounts.create', { member: row.id })"
+                      @click="row._showDropdown = false"
+                      class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Share Application
+                    </a>
                   </div>
                 </div>
               </div>

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\ShareAccount;
+use App\Models\Member;
+use App\Models\Nominee;
 use Inertia\Inertia;
 
 class ShareAccountController extends Controller
@@ -34,8 +36,22 @@ class ShareAccountController extends Controller
             'nominee_id' => 'nullable|exists:nominees,id',
         ]);
 
-        \App\Models\ShareAccount::create($validated);
+        ShareAccount::create($validated);
 
         return redirect()->route('share-accounts.index')->with('success', 'Share account created successfully.');
     }
+
+    public function share_application($memberId)
+    {
+        $member = Member::with('nominees')->findOrFail($memberId);
+
+        // Fix: Use 'nominees' (the relationship) instead of 'nominee'
+        $nominee = $member->nominees ?? null;
+
+        return Inertia::render('ShareAccounts/Create', [
+            'member' => $member,
+            'nominee' => $nominee,
+        ]);
+    }
 }
+
