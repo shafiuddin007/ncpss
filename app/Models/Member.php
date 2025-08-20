@@ -13,6 +13,7 @@ class Member extends Model
 
     protected $fillable = [
         'name',
+        'pin',
         'father_name',
         'mother_name',
         'gender',
@@ -42,6 +43,7 @@ class Member extends Model
         'per_union',
         'per_post_code',
         'status',
+        'earning_source',
         'created_by',
         'updated_by',
         'is_active',
@@ -168,5 +170,29 @@ class Member extends Model
         }
         // Otherwise, return storage URL
         return asset('storage/' . $this->photo);
+    }
+
+    /**
+     * Define the relationship with the Employer model.
+     */
+    public function employer()
+    {
+        return $this->hasOne(Employer::class, 'member_id', 'id');
+    }
+
+    /**
+     * Define the relationship with the ShareAccount model.
+     */
+    public function shareAccount()
+    {
+        return $this->hasOne(\App\Models\ShareAccount::class, 'member_id', 'id');
+    }
+
+    /**
+     * Define the relationship with the SavingsAccount model.
+     */
+    public function savingsAccount()
+    {
+        return $this->hasOne(\App\Models\SavingsAccount::class, 'member_id', 'id');
     }
 }

@@ -205,7 +205,15 @@ async function submitAction() {
             {{ console.log('userRole:', userRole, 'app.model:', app) }}
             <td class="border px-2 py-1 text-center">{{ app.application_number }}</td>
             <td class="border px-2 py-1 text-center">
-              {{ app.model_type === 'App\\Models\\Loan' ? 'Loan' : app.model_type }}
+              {{
+                app.model_type === 'App\\Models\\Loan'
+                  ? 'Loan'
+                  : app.model_type === 'App\\Models\\ShareAccount'
+                    ? 'Share Account'
+                    : app.model_type === 'App\\Models\\SavingsAccount'
+                      ? 'Savings Account'
+                      : app.model_type
+              }}
             </td>
             <td class="border px-2 py-1 capitalize text-center">
               <span :class="{
@@ -234,7 +242,7 @@ async function submitAction() {
                 </button>
                 <button
                   v-if="(
-                    (userRole === 'loan committee member' && app.status === 'pending' && app.approval_step === 1) ||
+                    (userRole === 'Secretary' && app.status === 'pending' && app.approval_step === 1) ||
                     (userRole === 'loan committee secretary' && app.status === 'pending' && app.approval_step === 2) ||
                     (userRole === 'loan committee chairman' && app.status === 'pending' && app.approval_step === 3) ||
                     (userRole === 'managing committee secretary' && app.status === 'pending' && app.approval_step === 4) ||
@@ -396,7 +404,7 @@ async function submitAction() {
               <option 
                 v-for="option in statusOptions.filter(opt => 
                   opt.value !== 'draft' && 
-                  (opt.value !== 'approved' || userRole === 'managing committee secretary')
+                  (opt.value !== 'approved' || userRole === 'Secretary')
                 )"
                 :key="option.value" 
                 :value="option.value"

@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use App\Models\Grantor;
 use App\Models\Member;
 use App\Models\LoanSchedule;
+use App\Models\MonthlyCloser;
+use App\Models\ShareAccount;
 
 use Carbon\Carbon;
 class GrantorController extends Controller
@@ -17,7 +19,7 @@ class GrantorController extends Controller
     {
         $applicant_id = $request->query('applicant_id');
 
-        $grantor = Member::where('id', $grantor_id)
+        $grantor = Member::where('pin', $grantor_id)
             ->where('is_active', true)
             ->where('is_deleted', false)
             ->first();
@@ -29,7 +31,55 @@ class GrantorController extends Controller
             return $errorResponse;
         }
 
-        return response()->json($grantor);
+        // Fetch latest monthly closer
+        // Make sure the table 'monthly_closers' exists in your database.
+        // If not, create a migration for it and run `php artisan migrate`.
+        $monthlyCloser = null;
+        
+            $monthlyCloser = MonthlyCloser::orderByDesc('year')
+                ->orderByDesc('month')
+                ->first();
+        
+
+        $shareAccountDetail = null;
+        if ($grantor) {
+            // Find the latest share account for the member
+            $shareAccount = ShareAccount::where('member_id', $grantor->id)
+                ->latest('created_at')
+                ->first();
+
+            if ($shareAccount) {
+                // Find the latest monthly closer before or equal to the share account's created_at
+                $monthlyCloser = MonthlyCloser::where(function ($q) use ($shareAccount) {
+                        $q->where('year', '<', $shareAccount->created_at->year)
+                          ->orWhere(function ($q2) use ($shareAccount) {
+                              $q2->where('year', '=', $shareAccount->created_at->year)
+                                 ->where('month', '<=', $shareAccount->created_at->month);
+                          });
+                    })
+                    ->where('account_id', $shareAccount->id)
+                    ->orderByDesc('year')
+                    ->orderByDesc('month')
+                    ->first();
+
+                $shareAccountDetail = $shareAccount;
+            } else {
+                // If no share account, fallback to latest monthly closer
+                $monthlyCloser = MonthlyCloser::orderByDesc('year')
+                    ->orderByDesc('month')
+                    ->first();
+            }
+        } else {
+            $monthlyCloser = MonthlyCloser::orderByDesc('year')
+                ->orderByDesc('month')
+                ->first();
+        }
+
+        return response()->json([
+            'grantor' => $grantor,
+            'share_account_detail' => $shareAccountDetail,
+            'monthly_closer' => $monthlyCloser,
+        ]);
     }
 
 

@@ -33,8 +33,7 @@ class SellProductController extends Controller
             ->where('status', Status::APPROVED->value)
             ->where('is_active', true)
             ->first(); // fetch the active loan row
-
-           
+       
         if (!$active_loan) {
             $previous_loan_count = Loan::where('member_id', $memberId)
                 ->where('status', Status::APPROVED->value)

@@ -141,6 +141,13 @@
                     >
                       Share Application
                     </a>
+                    <a
+                      :href="route('savings-accounts.create', { member: row.id })"
+                      @click="row._showDropdown = false"
+                      class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Savings Application
+                    </a>
                   </div>
                 </div>
               </div>

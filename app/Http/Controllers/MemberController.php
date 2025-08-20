@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Employer;
 
 class MemberController extends Controller
 {
@@ -43,6 +44,7 @@ class MemberController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'pin' => 'required|string|max:4', // Change 'PIN' to 'pin' to match form field
             'father_name' => 'required|string|max:255',
             'mother_name' => 'required|string|max:255',
             'mobile' => 'required|string|max:15',
@@ -57,6 +59,7 @@ class MemberController extends Controller
             'nid' => 'nullable|string|max:255',
             'occupation' => 'nullable|string|max:255',
             'educational_level' => 'nullable|string|max:255',
+            
 
             // Address fields
             'pre_address' => 'required|string|max:255',
@@ -77,24 +80,26 @@ class MemberController extends Controller
             'profile_image' => 'file|mimes:jpeg,png,jpg|max:2048',
             'signature_image' => 'required|file|mimes:jpeg,png,jpg|max:2048',
 
-            // Nominee fields
-            'nominee_name' => 'required|string|max:255',
-            'nominee_nid' => 'nullable|string|max:255',
-            'nominee_relationship' => 'required|string|max:255',
-            'nominee_age' => 'nullable|numeric|nullable',
-            'contact_number' => 'nullable|string|max:255',
-            'nominee_address' => 'nullable|string|max:255',
-
             // Introducer fields
-            'introducer_account_number' => 'required|string|max:255',
+            'introducer_account_number' => 'string|max:255',
             'introducer_name' => 'nullable|string|max:255',
             'introducer_signature' => 'nullable|file',
             'introducer_date' => 'nullable|date',
-            'acknowledgement' => 'accepted',
+
+            // Employer fields
+            'employer_name' => 'nullable|string|max:255',
+            'employer_email' => 'nullable|email|max:255',
+            'employer_phone' => 'nullable|string|max:15',
+            'designation' => 'nullable|string|max:255',
+            'employer_address' => 'nullable|string|max:255',
+            'earning_source' => 'nullable|boolean',
         ]);
+        
 
         $validated['dob'] = \Carbon\Carbon::createFromFormat('Y-m-d', $validated['dob'])->format('Y-m-d');
+        $validated['earning_source'] = $request->input('earning_source', true);
 
+        
         try {
             DB::beginTransaction();
 
@@ -117,23 +122,29 @@ class MemberController extends Controller
             $validated['created_by'] = auth()->user()->email;
             $validated['updated_by'] = auth()->user()->email;
 
+           
+
             // Create the member
             $member = Member::create($validated);
 
-            // Create the nominee
-            $member->nominees()->create([
-                'nid_birth_no' => $validated['nominee_nid'],
-                'nominee_name' => $validated['nominee_name'],
-                'relationship' => $validated['nominee_relationship'],
-                'age' => $validated['nominee_age'],
-                'contact_no' => $validated['contact_number'],
-                'address' => $validated['nominee_address'],
-            ]);
+            // Store employer if earning_source is checked
+            if ($validated['earning_source']) {
+                // Remove 'member_id' from the array, as employers table does not have this column
+                Employer::create([
+                    'name' => $request->input('employer_name'),
+                    'email' => $request->input('employer_email'),
+                    'phone' => $request->input('employer_phone'),
+                    'designation' => $request->input('designation'),
+                    'address' => $request->input('employer_address'),
+                    'is_active' => true,
+                    'is_deleted' => false,
+                ]);
+            }
 
             // Create the introducer
             $member->introducer()->create([
-                'name' => $validated['introducer_name'],
-                'account_number' => $member->id,
+                'name' => $validated['introducer_name'],            
+                'account_number' => $validated['introducer_account_number'],
                 'signature' => $validated['introducer_signature'],
                 'date' => $validated['introducer_date'],
             ]);
@@ -155,6 +166,8 @@ class MemberController extends Controller
     public function show($id): Response
     {
         $member = Member::findOrFail($id);
+
+        //dd($member);
 
         return Inertia::render('member/show', [
             'member' => $member,
@@ -218,6 +231,21 @@ class MemberController extends Controller
             ], 500);
         }
     }
+
+    public function introducerInfo($pin)
+    {
+        $member = Member::where('PIN', $pin)->first();
+        if (!$member) {
+            return response()->json(['message' => 'Introducer not found.'], 404);
+        }
+        return response()->json([
+            'id' => $member->id,
+            'name' => $member->name,
+            'mobile' => $member->mobile,
+            'email' => $member->email,
+        ]);
+    }
 }
-    
+
+
 

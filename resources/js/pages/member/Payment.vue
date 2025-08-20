@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, reactive, computed } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { router } from '@inertiajs/vue3';
@@ -7,7 +7,9 @@ import { router } from '@inertiajs/vue3';
 const props = defineProps<{
   member: any,
   loan: any,
-  loanSchedule: any
+  loanSchedule: any,
+  shareAccount?: any,
+  sharePayment?: any,
 }>();
 
 const paymentType = ref('loan_repayment');
@@ -44,40 +46,186 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+const payments = reactive({
+  share: 100,
+  share_due: 3,
+  loan_refund: 3,
+  interest_on_loan: 3,
+  loan_due_interest: 3,
+  lps: 3,
+  fine_on_loan: 3,
+  savings_deposit: 3,
+  fied_deposit: 3,
+  hds: 3,
+  hds_fine: 3,
+  sdps: 3,
+  sdps_fine: 3,
+  welfare_fund: 3,
+  education_fund: 3,
+  graveyard_fund: 10,
+});
+
+const grandTotal = computed(() =>
+  Object.values(payments).reduce((sum, val) => sum + (Number(val) || 0), 0)
+);
+
+const errors = ref<{ share?: string }>({});
+
+function submitPayments() {
+  errors.value = {};
+  if (!payments.share || Number(payments.share) === 0) {
+    errors.value.share = 'Share is required.';
+    return;
+  }
+  if (Number(payments.share) % 100 !== 0) {
+    errors.value.share = 'Share must be a multiple of 100.';
+    return;
+  }
+  // You can send `payments` to backend here
+  alert('Payments submitted: ' + JSON.stringify(payments));
+}
+
 </script>
 
 <template>
     <Head title="Products" />
     <AppLayout :breadcrumbs="breadcrumbs">
-  <div class="max-w-xl mx-auto mt-10 bg-white p-6 rounded shadow">
-    <h2 class="text-xl font-bold mb-4">Payment for {{ props.member.name }}</h2>
-    <div class="mb-4">
-      <label class="block mb-1 font-medium">Payment Type</label>
-      <select v-model="paymentType" class="border rounded px-3 py-2 w-full">
-        <option value="loan_repayment">Loan Repayment</option>
-        <option value="share_payment">Share Payment</option>
-        <option value="savings_payment">Savings Payment</option>
-        <option value="dps">DPS</option>
-        <option value="hdps">HDPS</option>
-      </select>
-    </div>
-    <button v-if="paymentType === 'loan_repayment'" @click="fetchLoanSchedule" class="mb-4 px-4 py-2 bg-blue-600 text-white rounded">Go</button>
-
-    <div v-if="paymentType === 'loan_repayment' && loan && loanSchedule" class="border rounded p-4 mt-4">
-      <div class="mb-2"><strong>Due Date:</strong> {{ loanSchedule.due_date }}</div>
-      <div class="mb-2"><strong>Principal:</strong> {{ loanSchedule.principal }}</div>
-      <div class="mb-2"><strong>Interest:</strong> {{ loanSchedule.interest }}</div>
-      <div class="mb-2"><strong>Total Payment:</strong> {{ loanSchedule.total_payment }}</div>
-      <div class="mb-2">
-        <label class="inline-flex items-center">
-          <input type="checkbox" v-model="checked" class="mr-2" />
-          Pay this amount
-        </label>
+  <div class="bg-gray-100">
+    <div class="contianer mx-auto p-6">
+      <h1 class="text-2xl font-bold mb-4">Make Payment</h1>
+      <div class="bg-white p-6 rounded shadow-md">
+        <form @submit.prevent="submitPayments">
+          <table class="w-full mb-6">
+            <thead>
+              <tr>
+                <th class="text-left">Description</th>
+                <th class="text-left">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Share</td>
+                <td>
+                  <input v-model.number="payments.share" type="number" class="border rounded px-2 py-1 w-24" />
+                  <div v-if="errors.share" class="text-red-600 text-xs mt-1">{{ errors.share }}</div>
+                </td>
+              </tr>
+              <tr v-if="props.sharePayment && props.sharePayment.due && Number(props.sharePayment.due) !== 0">
+                <td>Share Due</td>
+                <td>
+                  <input
+                    type="number"
+                    class="border rounded px-2 py-1 w-24"
+                    :value="props.sharePayment.due"
+                    readonly
+                  />
+                </td>
+              </tr>
+              <tr v-else>
+                <td>Share Due</td>
+                <td>
+                  <input v-model.number="payments.share_due" type="number" class="border rounded px-2 py-1 w-24" readonly />
+                </td>
+              </tr>
+              <tr>
+                <td>Loan Refund</td>
+                <td>
+                  <input v-model.number="payments.loan_refund" type="number" class="border rounded px-2 py-1 w-24" />
+                </td>
+              </tr>
+              <tr>
+                <td>Interest on Loan</td>
+                <td>
+                  <input v-model.number="payments.interest_on_loan" type="number" class="border rounded px-2 py-1 w-24" />
+                </td>
+              </tr>
+              <tr>
+                <td>Loan Due Interest</td>
+                <td>
+                  <input v-model.number="payments.loan_due_interest" type="number" class="border rounded px-2 py-1 w-24" />
+                </td>
+              </tr>
+              <tr>
+                <td>LPS</td>
+                <td>
+                  <input v-model.number="payments.lps" type="number" class="border rounded px-2 py-1 w-24" />
+                </td>
+              </tr>
+              <tr>
+                <td>Fine on Loan</td>
+                <td>
+                  <input v-model.number="payments.fine_on_loan" type="number" class="border rounded px-2 py-1 w-24" />
+                </td>
+              </tr>
+              <tr>
+                <td>Savings Deposit</td>
+                <td>
+                  <input v-model.number="payments.savings_deposit" type="number" class="border rounded px-2 py-1 w-24" />
+                </td>
+              </tr>
+              <tr>
+                <td>Fied Deposit</td>
+                <td>
+                  <input v-model.number="payments.fied_deposit" type="number" class="border rounded px-2 py-1 w-24" />
+                </td>
+              </tr>
+              <tr>
+                <td>HDS</td>
+                <td>
+                  <input v-model.number="payments.hds" type="number" class="border rounded px-2 py-1 w-24" />
+                </td>
+              </tr>
+              <tr>
+                <td>HDS Fine</td>
+                <td>
+                  <input v-model.number="payments.hds_fine" type="number" class="border rounded px-2 py-1 w-24" />
+                </td>
+              </tr>
+              <tr>
+                <td>SDPS</td>
+                <td>
+                  <input v-model.number="payments.sdps" type="number" class="border rounded px-2 py-1 w-24" />
+                </td>
+              </tr>
+              <tr>
+                <td>SDPS Fine</td>
+                <td>
+                  <input v-model.number="payments.sdps_fine" type="number" class="border rounded px-2 py-1 w-24" />
+                </td>
+              </tr>
+              <tr>
+                <td>Welfare Fund</td>
+                <td>
+                  <input v-model.number="payments.welfare_fund" type="number" class="border rounded px-2 py-1 w-24" />
+                </td>
+              </tr>
+              <tr>
+                <td>Education Fund</td>
+                <td>
+                  <input v-model.number="payments.education_fund" type="number" class="border rounded px-2 py-1 w-24" />
+                </td>
+              </tr>
+              <tr>
+                <td>Graveyard Fund</td>
+                <td>
+                  <input v-model.number="payments.graveyard_fund" type="number" class="border rounded px-2 py-1 w-24" />
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="font-bold">
+                <td>Grand Total</td>
+                <td>{{ grandTotal }}</td>
+              </tr>
+            </tfoot>
+          </table>
+          <div class="flex justify-end">
+            <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
+              Submit Payment
+            </button>
+          </div>
+        </form>
       </div>
-      <button :disabled="!checked" @click="makePayment" class="px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50">Make Payment</button>
-    </div>
-    <div v-else-if="paymentType === 'loan_repayment' && (!loan || !loanSchedule)" class="text-red-600 mt-4">
-      No active loan or no due payment for this month.
     </div>
   </div>
   </AppLayout>

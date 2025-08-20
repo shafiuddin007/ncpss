@@ -8,8 +8,8 @@ import { Label } from '@/components/ui/label';
 import { ref, computed } from 'vue';
 
 const breadcrumbs = [
-    { title: 'Share Accounts', href: '/share-accounts' },
-    { title: 'Create Share Account', href: '' },
+    { title: 'Savings Accounts', href: '/savings-accounts' },
+    { title: 'Create Savings Account', href: '' },
 ];
 
 interface RelationshipOption {
@@ -18,59 +18,49 @@ interface RelationshipOption {
 }
 
 const props = defineProps<{
-    member: object | null;
-    nominee: object | null;
+    member?: object | null;
+    nominee?: object | null;
     relationshipOptions: RelationshipOption[];
-    shareAccount?: object | null; // <-- Accept shareAccount prop
+    savingsAccount?: object | null;
 }>();
 
 const form = useForm({
     member_id: '',
-    share_account_number: '',
-    initial_deposit: '', // <-- Added initial_deposit field
-    employer_name: '',
-    employer_address: '',
-    employer_email: '',
-    employer_phone: '',
-    designation: '', // Add designation field
+    savings_account_number: '',
+    initial_deposit: '',
     nominee_id: '',
     nominee_name: '',
     relationship: '',
     age: '',
     contact_no: '',
     address: '',
+    scan_image: null as File | null,
 });
 
 const nomineeEdit = ref(false);
 
-// If member info is provided, prefill form fields
 if (props.member) {
     form.member_id = props.member.id || '';
-    // Optionally prefill other fields from member
 }
 if (props.nominee) {
     form.nominee_id = props.nominee.id || '';
-    // Optionally prefill other fields from nominee
 }
 
-console.log('Nominee:', props.nominee);
-
 const handleSubmit = () => {
-    form.post('/share-accounts', {
+    form.post('/savings-accounts', {
         onSuccess: () => {
-            router.visit('/share-accounts');
+            router.visit('/savings-accounts');
         },
     });
 };
 
-const hasShareAccount = computed(() => !!props.shareAccount);
+const hasSavingsAccount = computed(() => !!props.savingsAccount);
 </script>
 
 <template>
-    <Head title="Create Share Account" />
+    <Head title="Create Savings Account" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="m-20">
-            <!-- Member Info Section -->
             <div v-if="props.member" class="mb-8 p-6 bg-gray-100 border border-gray-200 rounded">
                 <h3 class="text-lg font-semibold mb-2">Member Information</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -122,11 +112,10 @@ const hasShareAccount = computed(() => !!props.shareAccount);
                     </div>
                 </div>
             </div>
-            <!-- End Member Info Section -->
 
-            <div v-if="hasShareAccount">
+            <div v-if="hasSavingsAccount">
                 <div class="p-8 bg-yellow-100 border border-yellow-300 rounded text-yellow-800 text-lg font-semibold mb-6">
-                    Member already has a share account.
+                    Member already has a savings account.
                 </div>
                 <Link :href="'/members/'" class="inline-block">
                     <Button type="button" class="bg-blue-500 text-white hover:bg-blue-600">
@@ -135,20 +124,12 @@ const hasShareAccount = computed(() => !!props.shareAccount);
                 </Link>
             </div>
             <form v-else @submit.prevent="handleSubmit" class="flex flex-col gap-6">
-                <h2 class="text-lg font-semibold">Share Account Information</h2>
+                <h2 class="text-lg font-semibold">Savings Account Information</h2>
                 <div class="flex gap-6">
-                    <!-- Remove Member ID field from the form -->
-                    <!--
                     <div class="flex-1">
-                        <Label for="member_id">Member ID</Label>
-                        <Input id="member_id" v-model="form.member_id" type="number" required placeholder="Member ID" />
-                        <InputError :message="form.errors.member_id" />
-                    </div>
-                    -->
-                    <div class="flex-1">
-                        <Label for="share_account_number">Account Number</Label>
-                        <Input id="share_account_number" v-model="form.share_account_number" type="text" required placeholder="Account Number" />
-                        <InputError :message="form.errors.share_account_number" />
+                        <Label for="savings_account_number">Account Number</Label>
+                        <Input id="savings_account_number" v-model="form.savings_account_number" type="text" required placeholder="Account Number" />
+                        <InputError :message="form.errors.savings_account_number" />
                     </div>
                     <div class="flex-1">
                         <Label for="initial_deposit">Initial Deposit</Label>
@@ -208,10 +189,10 @@ const hasShareAccount = computed(() => !!props.shareAccount);
                 <!-- End Nominee Section -->
 
                 <div class="mt-6 flex justify-end">
-                    <Link href="/share-accounts" class="mr-4">
+                    <Link href="/savings-accounts" class="mr-4">
                         <Button variant="destructive" type="button">Cancel</Button>
                     </Link>
-                    <Button variant="submit" :disabled="form.processing">Create Share Account</Button>
+                    <Button variant="submit" :disabled="form.processing">Create Savings Account</Button>
                 </div>
             </form>
         </div>

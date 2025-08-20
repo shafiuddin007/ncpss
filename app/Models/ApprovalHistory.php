@@ -12,6 +12,7 @@ class ApprovalHistory extends Model
 
     protected $fillable = [
         'application_id',
+        'application_type',
         'approval_step',
         'approval_role',
         'status',

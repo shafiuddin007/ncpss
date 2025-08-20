@@ -16,7 +16,7 @@ use App\Http\Controllers\Api\GrantorController;
 
 // Route::middleware('auth',)->group(function () {
 Route::group(['middleware' =>
-['role:admin|loan committee member|loan committee secretary|loan committee chairman|managing committee secretary']], function () {
+['role:admin|MIS|Manager|Secretary|President']], function () {
     Route::get('/members/create', [MemberController::class, 'create'])->name('member.create');
     Route::get('/members', [MemberController::class, 'list'])->name('member.list');
     Route::post('/members', [MemberController::class, 'store'])->name('member.add');
@@ -68,4 +68,5 @@ Route::group(['middleware' =>
 Route::get('/divisions/{division}/districts', [DivisionController::class, 'getDistricts'])->name('api.divisions.districts');
 Route::get('/districts/{district}/thanas', [DistrictController::class, 'getThanas'])->name('api.districts.thanas');
 Route::get('/find/{id}/grantor', [GrantorController::class, 'findGrantor'])->name('api.find.grantor');
+Route::get('/members/introducer-info/{pin}', [MemberController::class, 'introducerInfo'])->name('member.introducer-info');
 

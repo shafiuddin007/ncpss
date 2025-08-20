@@ -13,12 +13,14 @@ class Nominee extends Model
 
     protected $fillable = [
         'member_id',
+        'model_type', // Added to specify the model type
         'nid_birth_no',
         'nominee_name',
         'relationship',
         'age',
         'contact_no',
         'address',
+        'scan_image',
     ];
 
     /**

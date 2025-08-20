@@ -53,8 +53,8 @@ console.log('Member:', props.member);
                                     <Link :href="`/members/${member.id}/sell-product`">
                                         <Button variant="submit">Sell Product</Button>
                                     </Link>
-                                    <Link :href="`/members/${member.account_number}/edit`">
-                                        <Button variant="submit">Sell Product</Button>
+                                    <Link :href="`/members/${member.id}/edit`">
+                                        <Button variant="submit">Edit Member</Button>
                                     </Link>
                                 </div>
                             </div>
@@ -138,12 +138,17 @@ console.log('Member:', props.member);
                                             Introducer
                                         </h2>
                                         <h3 class="font-bold text-2xl text-blue-600 dark:text-blue-400 mb-4">
-                                            <Link :href="`/members/${member.introducer.account_number}`">
+                                            <Link
+                                                v-if="member.introducer && member.introducer.account_number"
+                                                :href="`/members/${member.introducer.account_number}`">
                                                 {{ member.introducer.name }}
                                             </Link>
+                                            <span v-else>
+                                                {{ member.introducer?.name || 'N/A' }}
+                                            </span>
                                         </h3>
                                         <div class="w-48 h-32 mx-auto border rounded-lg overflow-hidden shadow-md bg-gray-50 dark:bg-gray-800">
-                                            <img v-if="member.introducer.signature" 
+                                            <img v-if="member.introducer && member.introducer.signature" 
                                                  :src="`/storage/${member.introducer.signature}`" 
                                                  alt="Introducer's Signature" 
                                                  class="w-full h-full object-contain p-2">

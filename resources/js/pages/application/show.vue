@@ -66,7 +66,10 @@ const breadcrumbs = [
               <div>
                 <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Application Type</p>
                 <p class="text-sm font-medium text-gray-900 mt-1">
-                  {{ app.model_type === 'App\\Models\\Loan' ? 'Loan Application' : 'Other Application' }}
+                  <span v-if="app.model_type === 'App\\Models\\Loan'">Loan Application</span>
+                  <span v-else-if="app.model_type === 'App\\Models\\ShareAccount'">Share Account Application</span>
+                  <span v-else-if="app.model_type === 'App\\Models\\SavingsAccount'">Savings Account Application</span>
+                  <span v-else>Other Application</span>
                 </p>
               </div>
               <div>
@@ -137,8 +140,8 @@ const breadcrumbs = [
             </h5>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Member ID</p>
-                <p class="text-sm font-medium text-gray-900 mt-1">{{ app.model.member.id }}</p>
+                <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">PIN</p>
+                <p class="text-sm font-medium text-gray-900 mt-1">{{ app.model.member.pin }}</p>
               </div>
               <div>
                 <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">National ID</p>
@@ -160,12 +163,11 @@ const breadcrumbs = [
           </div>
           <div class="border-t border-gray-200 mt-6"></div>
           <!-- Employment Information -->
-          <div class="px-6 pb-6 mt-6 gap-6">
+          <div
+            v-if="app.model_type === 'App\\Models\\Loan'"
+            class="px-6 pb-6 mt-6 gap-6"
+          >
             <h5 class="text-md font-semibold text-gray-800 mb-4 flex items-center">
-              <!-- <svg class="w-5 h-5 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg> -->
               Employment Information
             </h5>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -187,15 +189,17 @@ const breadcrumbs = [
               </div>
             </div>
           </div>
-          <div class="border-t border-gray-200 mt-6"></div>
+          <div
+            v-if="app.model_type === 'App\\Models\\Loan'"
+            class="border-t border-gray-200 mt-6"
+          ></div>
 
           <!-- Income Section -->
-          <div class="px-6 pb-6 mt-6 gap-6">
+          <div
+            v-if="app.model_type === 'App\\Models\\Loan'"
+            class="px-6 pb-6 mt-6 gap-6"
+          >
             <h5 class="text-md font-semibold text-gray-800 mb-4 flex items-center">
-              <!-- <svg class="w-5 h-5 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg> -->
               Income Details
             </h5>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -216,14 +220,16 @@ const breadcrumbs = [
               </div>
             </div>
           </div>
-          <div class="border-t border-gray-200 mt-6"></div>
+          <div
+            v-if="app.model_type === 'App\\Models\\Loan'"
+            class="border-t border-gray-200 mt-6"
+          ></div>
           <!-- Expenses Section -->
-          <div class="px-6 pb-6 mt-6 gap-6">
+          <div
+            v-if="app.model_type === 'App\\Models\\Loan'"
+            class="px-6 pb-6 mt-6 gap-6"
+          >
             <h5 class="text-md font-semibold text-gray-800 mb-4 flex items-center">
-              <!-- <svg class="w-5 h-5 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
-              </svg> -->
               Expense Details
             </h5>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -263,163 +269,11 @@ const breadcrumbs = [
 
         </div>
 
-        <!-- Loan Information Section -->
-        <div v-if="app.model_type === 'App\\Models\\Loan' && app.model"
-          class="bg-white shadow rounded-lg overflow-hidden">
-          <div class="bg-gradient-to-r from-indigo-100 to-blue-300 px-6 py-4">
-            <h2 class="text-lg font-semibold">Loan Details</h2>
-          </div>
-          <div class="p-6">
-            <!-- Product Information -->
-            <div v-if="app.model.product" class="px-6 pb-6 mt-6 gap-6">
-              <h3 class="text-md font-medium text-gray-900 mb-4">Product Information</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div>
-                  <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</p>
-                  <p class="text-sm font-medium text-gray-900 mt-1">{{ app.model.product.name || '-' }}</p>
-                </div>
-                <div>
-                  <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Minimum Amount</p>
-                  <p class="text-sm font-medium text-gray-900 mt-1">BDT {{ (app.model.min_balance || 0) }}</p>
-                </div>
-                <div>
-                  <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Maximum Amount</p>
-                  <p class="text-sm font-medium text-gray-900 mt-1">BDT {{ (app.model.max_loan_amount || 0) }}</p>
-                </div>
-                <div>
-                  <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Interest Rate</p>
-                  <p class="text-sm font-medium text-gray-900 mt-1">{{ app.model.interest_rate || '0' }}%</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="border-t border-gray-200 mt-6"></div>
-
-            <!-- Loan Application Information -->
-            <div class="px-6 pb-6 mt-6 gap-6">
-              <h3 class="text-md font-medium text-gray-900 mb-4">Loan Information</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div>
-                  <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Applied Loan Amount</p>
-                  <p class="text-sm font-medium text-gray-900 mt-1"> {{ app.model.loan_amount }} </p>
-                </div>
-                <div>
-                  <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Loan Purpose</p>
-                  <p class="text-sm font-medium text-gray-900 mt-1"> {{ (app.model.loan_purpose || '-') }} </p>
-                </div>
-                <div>
-                  <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Loan Type</p>
-                  <p class="text-sm font-medium text-gray-900 mt-1"> {{ (app.model.loan_type || '-') }} </p>
-                </div>
-                <div v-if="app.model.loan_type === 'Urgent'">
-                  <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Urgent Fee</p>
-                  <p class="text-sm font-medium text-gray-900 mt-1"> {{ (app.model.urgent_fee || '0') }} </p>
-                </div>
-                <div>
-                  <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Installment</p>
-                  <p class="text-sm font-medium text-gray-900 mt-1"> {{ app.model.total_installment || '0' }} </p>
-                </div>
-                <div>
-                  <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Installment Start Date</p>
-                  <p class="text-sm font-medium text-gray-900 mt-1">
-                    {{
-                      app.model.installment_start_date
-                        ? new Date(app.model.installment_start_date).toLocaleDateString('en-GB', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric'
-                        }).replace(/(\d{2}) (\w{3}) (\d{4})/, (m, d, mth, y) => `${d} ${mth} ${y}`)
-                        : '-'
-                    }}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div v-if="app.model.other_loan_amount > 0" class="border-t border-gray-200 mt-6"></div>
-            <!-- Other Loan -->
-            <div v-if="app.model.other_loan_amount > 0" class="px-6 pb-6 mt-6 gap-6">
-              <h3 class="text-md font-medium text-gray-900 mb-4">Other Loan</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div>
-                  <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Other Loan Amount</p>
-                  <p class="text-sm font-medium text-gray-900 mt-1"> {{ app.model.other_loan_amount }} </p>
-                </div>
-                <div>
-                  <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Loan Purpose</p>
-                  <p class="text-sm font-medium text-gray-900 mt-1"> {{ app.model.other_loan_installment }} </p>
-                </div>
-                <div>
-                  <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Loan Type</p>
-                  <p class="text-sm font-medium text-gray-900 mt-1"> {{ app.model.other_loan_type }} </p>
-                </div>
-              </div>
-            </div>
-
-            <div class="border-t border-gray-200 mt-6"></div>
-            <!-- Collateral Information -->
-            <div v-if="app.model.loan_collateral_type" class="px-6 pb-6 mt-6 gap-6">
-              <h3 class="text-md font-medium text-gray-900 mb-4">Collateral Information</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Collateral Type</p>
-                  <p class="text-sm font-medium text-gray-900 mt-1 capitalize">
-                    {{ app.model.loan_collateral_type.replace('_', ' ') }}
-                  </p>
-                </div>
-                <div v-if="app.model.loan_collateral_type === 'self_deposit'">
-                  <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Self Deposit Amount</p>
-                  <p class="text-sm font-medium text-gray-900 mt-1">
-                    BDT {{ (app.model.self_deposite_amount || 0) }}
-                  </p>
-                </div>
-              </div>
-
-
-            </div>
-
-            <!-- Grantors Section -->
-            <div v-if="app.model?.grantors?.length" class="bg-white shadow rounded-lg overflow-hidden">
-              <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4">
-                <h2 class="text-lg font-semibold text-white">Grantors</h2>
-              </div>
-              <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                  <thead class="bg-gray-50">
-                    <tr>
-                      <th scope="col"
-                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member
-                        ID
-                      </th>
-                      <th scope="col"
-                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deposit
-                        Amount</th>
-                      <th scope="col"
-                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loan
-                        Amount
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody class="bg-white divide-y divide-gray-200">
-                    <tr v-for="g in app.model.grantors" :key="g.id">
-                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ g.member_id }}</td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">BDT {{ (g.deposit_amount) }}</td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">BDT {{ (g.loan_amount) }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <div v-if="!app.model?.grantors?.length" class="bg-white shadow rounded-lg overflow-hidden">
-              <div class="p-6 text-center text-gray-500">
-                No grantors found for this loan application.
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- Family Members Section -->
-        <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div
+          v-if="app.model_type === 'App\\Models\\Loan'"
+          class="bg-white shadow rounded-lg overflow-hidden"
+        >
           <div class="bg-gradient-to-r from-indigo-100 to-blue-200 px-6 py-4">
             <h2 class="text-lg font-semibold ">Family Members</h2>
           </div>
@@ -428,7 +282,7 @@ const breadcrumbs = [
             <p class="text-sm font-medium text-gray-900 mt-1"> {{ app.model.family_member }} </p>
           </div>
           <div class="overflow-x-auto"
-            v-if="app.model_type === 'App\\Models\\Loan' && app.model?.family_members?.length">
+            v-if="app.model?.family_members?.length">
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
                 <tr>
@@ -461,10 +315,60 @@ const breadcrumbs = [
             </table>
           </div>
           <!-- Empty State Messages -->
-          <div v-if="app.model_type === 'App\\Models\\Loan' && !app.model?.family_members?.length"
+          <div v-if="!app.model?.family_members?.length"
             class="bg-white shadow rounded-lg overflow-hidden">
             <div class="p-6 text-center text-gray-500">
               No family members found for this loan application.
+            </div>
+          </div>
+        </div>
+
+        <!-- Nominee Section -->
+        <div
+          v-if="app.model_type === 'App\\Models\\ShareAccount' || app.model_type === 'App\\Models\\SavingsAccount'"
+          class="bg-white shadow rounded-lg overflow-hidden"
+        >
+          <div class="bg-gradient-to-r from-indigo-100 to-blue-200 px-6 py-4">
+            <h2 class="text-lg font-semibold ">Nominee</h2>
+          </div>
+          
+          <div class="overflow-x-auto"
+            v-if="app.model?.nominee">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Name
+                  </th>
+                  <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Relationship
+                  </th>
+                  <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Age
+                  </th>
+                  <th scope="col"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Contact Number
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ app.model.nominee.nominee_name }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ app.model.nominee.relationship }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ app.model.nominee.age }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ app.model.nominee.contact_no }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- Empty State Messages -->
+          <div v-else class="bg-white shadow rounded-lg overflow-hidden">
+            <div class="p-6 text-center text-gray-500">
+              No nominees found for this loan application.
             </div>
           </div>
         </div>

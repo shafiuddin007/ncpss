@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\App;
 use \Illuminate\Support\Facades\Auth;
 use App\Models\Loan;
 use App\Models\LoanSchedule;
+use App\Models\ShareAccount;
+use App\Models\Product;
+use App\Models\Nominee;
+use App\Services\ApprovalService;
+use App\Models\SavingsAccount;
 
 class ApplicationController extends Controller
 {
@@ -35,21 +40,40 @@ class ApplicationController extends Controller
         // Filter by product type (via polymorphic relation)
         if ($request->filled('product_type')) {
             if ($request->product_type === 'loan') {
-                $query->where('model_type', \App\Models\Loan::class);
+                $query->where('model_type', Loan::class);
+            } elseif ($request->product_type === 'share_account') {
+                $query->where('model_type', ShareAccount::class);
             } else {
                 $query->whereHasMorph(
                     'model',
-                    [\App\Models\Loan::class, \App\Models\Product::class],
+                    [Loan::class, ShareAccount::class],
                     function ($q) use ($request) {
-                        $q->whereHas('product', function ($sub) use ($request) {
-                            $sub->where('type', $request->product_type);
+                        // Only filter by product if the model has a product relationship
+                        $q->when(method_exists($q->getModel(), 'product'), function ($subQ) use ($request) {
+                            $subQ->whereHas('product', function ($sub) use ($request) {
+                                $sub->where('type', $request->product_type);
+                            });
                         });
                     }
                 );
             }
         }
 
+        // Always eager load all possible model types for correct display
+        $query->with([
+            'model' => function ($q) {
+                $q->morphWith([
+                    Loan::class => ['member', 'familyMembers', 'grantors', 'product'],
+                    ShareAccount::class => ['member', 'nominee'],
+                ]);
+            }
+        ]);
+
+       
+
         $applications = $query->latest()->paginate(20)->withQueryString();
+
+        
 
         // Get status options from enum
         $statusOptions = collect(ApprovalStatus::cases())->map(fn($case) => [
@@ -57,16 +81,12 @@ class ApplicationController extends Controller
             'label' => $case->label(),
         ])->all();
 
-        // Get product type options from enum
-        $productTypeOptions = collect(ProductType::cases())->map(fn($case) => [
-            'value' => $case->value,
-            'label' => ucfirst(str_replace('_', ' ', $case->name)),
-        ])->all();
+        
 
         return Inertia::render('application/index', [
             'applications' => $applications,
             'statusOptions' => $statusOptions,
-            'productTypeOptions' => $productTypeOptions,
+            
         ]);
     }
 
@@ -75,15 +95,33 @@ class ApplicationController extends Controller
      */
     public function show(Application $application)
     {
-        $application->load([
-            'model',
-            'model.member',
-            'model.familyMembers',
-            'model.grantors',
-            'model.product',
-        ]);
-
-        //  dd($application->toArray());
+        // Dynamically load relations based on model_type
+        if ($application->model_type === Loan::class) {
+            $application->load([
+                'model',
+                'model.member',
+                'model.familyMembers',
+                'model.grantors',
+                'model.product',
+            ]);
+        } elseif ($application->model_type === ShareAccount::class) {
+            $application->load([
+                'model',
+                'model.member',
+                'model.nominee',
+            ]);
+        }  elseif ($application->model_type === SavingsAccount::class) {
+            $application->load([
+                'model',
+                'model.member',
+                'model.nominee',
+            ]);
+        }
+        else {
+            $application->load(['model']);
+        }
+        
+        
 
         return Inertia::render('application/show', [
             'application' => $application,
@@ -127,18 +165,45 @@ class ApplicationController extends Controller
             $documentPath = $request->file('document')->store('approval_documents', 'public');
         }
 
+        // Use ApprovalService for approval logic
+        $approvalService = app(ApprovalService::class);
+
+        // Secretary approval for ShareAccount
+        if (
+            $history->approval_step == 1 &&
+            $role === 'Secretary' &&
+            $history->application_type === ShareAccount::class
+        ) {
+            // Update approval history
+            $approvalService->updateApprovalHistory($history, [
+                'status' => $validated['status'],
+                'approval_role' => $role,
+                'remarks' => $validated['remarks'] ?? $history->remarks,
+                'document_path' => $documentPath ?? $history->document_path,
+            ]);
+
+            // If approved, update share_account status to active
+            if ($validated['status'] === ApprovalStatus::APPROVED->value) {
+                $shareAccount = ShareAccount::find($history->application_id);
+                if ($shareAccount) {
+                    $shareAccount->status = ApprovalStatus::APPROVED->value;
+                    $shareAccount->save();
+                }
+
+                Application::where('id', $application->id)
+                    ->update(['status' => ApprovalStatus::APPROVED->value]);
+            }
+
+            return response()->json(['success' => true]);
+        }
+
+        // ...existing switch/case logic...
         switch (true) {
-            case $history->approval_step == 1 && $role === 'loan committee member':
+            case $history->approval_step == 1 && ($role === 'Admin' || $role === 'MIS' || $role === 'Manager'):
                 return $this->handleStepOne($validated, $history, $role, $application, $documentPath, $request);
 
-            case $history->approval_step == 2 && $role === 'loan committee secretary':
-                return $this->handleStepTwo($validated, $history, $role, $application, $documentPath, $request);
-
-            case $history->approval_step == 3 && $role === 'loan committee chairman':
-                return $this->handleStepThree($validated, $history, $role, $application, $documentPath, $request);
-
-            case $history->approval_step == 4 && $role === 'managing committee secretary':
-                return $this->handleStepFour($validated, $history, $role, $application, $documentPath, $request);
+            case $history->approval_step == 2 && $role === 'Secretary':
+                return $this->handleStepApproved($validated, $history, $role, $application, $documentPath, $request);
 
             default:
                 return response()->json(['error' => 'Invalid approval step or role.'], 422);
@@ -158,7 +223,7 @@ class ApplicationController extends Controller
 
         if ($validated['status'] === 'forwarded') {
             $step++;
-            $this->forwardApplication($application, $step, 'loan committee secretary');
+            $this->forwardApplication($application, $step, 'Secretary');
         } else {
             $this->updateApplicationStatus($application, $validated['status'], $role);
         }
@@ -167,49 +232,49 @@ class ApplicationController extends Controller
     }
 
     // Step 2: loan committee secretary
-    private function handleStepTwo($validated, $history, $role, $application, $documentPath, $request)
-    {
-        $errorResponse = $this->validateApprovalStepOne($validated, $history, $role);
-        if ($errorResponse) {
-            return $errorResponse;
-        }
+    // private function handleStepTwo($validated, $history, $role, $application, $documentPath, $request)
+    // {
+    //     $errorResponse = $this->validateApprovalStepOne($validated, $history, $role);
+    //     if ($errorResponse) {
+    //         return $errorResponse;
+    //     }
 
-        $this->updateHistory($history, $validated, $documentPath, $role);
-        $step = $application->approval_step ?? 2;
+    //     $this->updateHistory($history, $validated, $documentPath, $role);
+    //     $step = $application->approval_step ?? 2;
 
-        if ($validated['status'] === 'forwarded') {
-            $step++;
-            $this->forwardApplication($application, $step, 'loan committee chairman');
-        } else {
-            $this->updateApplicationStatus($application, $validated['status'], $role);
-        }
+    //     if ($validated['status'] === 'forwarded') {
+    //         $step++;
+    //         $this->forwardApplication($application, $step, 'loan committee chairman');
+    //     } else {
+    //         $this->updateApplicationStatus($application, $validated['status'], $role);
+    //     }
 
-        return response()->json(['success' => true]);
-    }
+    //     return response()->json(['success' => true]);
+    // }
 
-    // Step 3: loan committee chairman
-    private function handleStepThree($validated, $history, $role, $application, $documentPath, $request)
-    {
-        $errorResponse = $this->validateApprovalStepOne($validated, $history, $role);
-        if ($errorResponse) {
-            return $errorResponse;
-        }
+    // // Step 3: loan committee chairman
+    // private function handleStepThree($validated, $history, $role, $application, $documentPath, $request)
+    // {
+    //     $errorResponse = $this->validateApprovalStepOne($validated, $history, $role);
+    //     if ($errorResponse) {
+    //         return $errorResponse;
+    //     }
 
-        $this->updateHistory($history, $validated, $documentPath, $role);
-        $step = $application->approval_step ?? 3;
+    //     $this->updateHistory($history, $validated, $documentPath, $role);
+    //     $step = $application->approval_step ?? 3;
 
-        if ($validated['status'] === 'forwarded') {
-            $step++;
-            $this->forwardApplication($application, $step, 'managing committee secretary');
-        } else {
-            $this->updateApplicationStatus($application, $validated['status'], $role);
-        }
+    //     if ($validated['status'] === 'forwarded') {
+    //         $step++;
+    //         $this->forwardApplication($application, $step, 'managing committee secretary');
+    //     } else {
+    //         $this->updateApplicationStatus($application, $validated['status'], $role);
+    //     }
 
-        return response()->json(['success' => true]);
-    }
+    //     return response()->json(['success' => true]);
+    // }
 
     // Step 4: managing committee secretary
-    private function handleStepFour($validated, $history, $role, $application, $documentPath, $request)
+    private function handleStepApproved($validated, $history, $role, $application, $documentPath, $request)
     {
         $this->updateHistory($history, $validated, $documentPath, $role);
 
@@ -327,7 +392,7 @@ class ApplicationController extends Controller
 
         for ($i = 1; $i <= $term; $i++) {
             $dueDate = \Carbon\Carbon::parse($startDate)->addMonths($i);
-            \App\Models\LoanSchedule::create([
+            LoanSchedule::create([
                 'loan_id' => $loan->id,
                 'application_id' => $application->id,
                 'installment_number' => $i,

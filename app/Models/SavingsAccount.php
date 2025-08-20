@@ -5,13 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ShareAccount extends Model
+class SavingsAccount extends Model
 {
     use HasFactory;
 
+    protected $table = 'savings_accounts';
+
     protected $fillable = [
         'member_id',
-        'share_account_number',
+        'savings_account_number',
         'initial_deposit',
         'nominee_id',
         'status',

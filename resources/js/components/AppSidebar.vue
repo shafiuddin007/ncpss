@@ -34,10 +34,10 @@ const mainNavItems: NavItem[] = [
         icon: Users2,
         roles: [
             'admin',
-            'loan committee member',
-            'loan committee secretary',
-            'loan committee chairman',
-            'managing committee secretary' // <-- add this role
+            'Collection',
+            'MIS',
+            'Manager',
+            'Secretary'
         ],
     }, 
     {
@@ -56,10 +56,10 @@ const mainNavItems: NavItem[] = [
         icon: FileText,
         roles: [
             'admin',
-            'loan committee member',
-            'loan committee secretary',
-            'loan committee chairman',
-            'managing committee secretary' // <-- add this role
+            'Collection',
+            'MIS',
+            'Manager',
+            'Secretary'
         ],
     },
     {

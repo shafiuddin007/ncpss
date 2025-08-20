@@ -28,6 +28,7 @@ type LoanInfo = {
 };
 
 type Grantor = {
+  is_primary: any;
   member_id: string;
   deposit_amount: string;
   loan_amount: string;
@@ -176,12 +177,40 @@ const editingGrantorIndex = ref<number | null>(null);
 const newGrantor = reactive<Grantor>({
   member_id: '',
   deposit_amount: '',
-  loan_amount: '',
+  is_primary: false,
   name: '',
-  // document: null,
+  loan_amount: ''
 });
 
+let surety_amount = 0;
 
+function initializeSuretyAmount(loanAmount: number) {
+  surety_amount = Number(loanAmount || 0) * 1.1;  // Assuming surety is 110% of the loan amount
+}
+
+function addSurety() {
+  initializeSuretyAmount(Number(form.loan_amount));
+  console.log('Adding surety amount:', surety_amount, 'Loan Amount:', form.loan_amount);
+  form.grantors.forEach(grantor => {
+    surety_amount += Number(grantor.deposit_amount || 0);
+    console.log('Adding grantor deposit amount:', grantor.deposit_amount); 
+  });
+  
+  console.log('Total surety amount after adding grantors:', surety_amount);
+  return surety_amount;
+}
+
+function substructSurety() {
+
+  initializeSuretyAmount(Number(form.loan_amount));
+  console.log('Substructing surety amount:', surety_amount, 'Loan Amount:', form.loan_amount);
+  form.grantors.forEach(grantor => {
+    surety_amount = Number(surety_amount) - Number(grantor.deposit_amount || 0);
+    console.log('Substructing grantor deposit amount:', grantor.deposit_amount);
+  });
+  console.log('Total surety amount after substructing grantors:', surety_amount);
+  return surety_amount;
+}
 
 async function addGrantor() {
   const grantorData = { ...newGrantor };
@@ -193,7 +222,9 @@ async function addGrantor() {
         },
       });
       Object.assign(grantorData, response.data);
-      console.log(response.data);
+      grantorData.name = response.data.grantor.name || ''; // Ensure name is set
+      grantorData.deposit_amount = response.data.monthly_closer.deposite || 0; // Ensure deposit_amount is set
+      console.log('Grantor data fetched successfully:', response.data);
       form.errors.grantor_member_id = '';
       form.grantors.push(grantorData);
     } catch (error) {
@@ -201,7 +232,7 @@ async function addGrantor() {
       console.error('Failed to fetch grantor info:', error);
     }
 
-    
+
   } else {
     console.log(grantorData);
     form.errors.grantor_member_id = 'Grantor member ID is required';
@@ -227,6 +258,7 @@ function editGrantor(index: number) {
 }
 
 function removeGrantor(index: number) {
+  // Remove the grantor and its deposit_amount from the grantors array
   form.grantors.splice(index, 1);
   editingGrantorIndex.value = null;
 }
@@ -434,6 +466,7 @@ onMounted(() => {
     form.loan_amount = Number(props.loan_info.share_b4_3m) * Number(props.loan_slab.times) <= Number(props.loan_slab.maximum_loan_receivable) ? Number(props.loan_info.share_b4_3m) * Number(props.loan_slab.times) : String(props.loan_slab.maximum_loan_receivable);
     form.interest_rate = selectedProduct.value.interest_rate !== null ? String(selectedProduct.value.interest_rate) : '0';
     form.loan_term_months = props.loan_slab.number_of_installment !== null ? String(props.loan_slab.number_of_installment) : '0';
+    initializeSuretyAmount(form.loan_amount);
     // form.loan_term_months = selectedProduct.value.loan_term_months !== null ? String(selectedProduct.value.loan_term_months) : '0';
   }
 });
@@ -469,9 +502,16 @@ watch(
   }
 );
 
-console.log('Loan Slab:', props.loan_slab);
+
 function closeModal() {
   form.clearErrors('application');
+}
+
+// Add this function before the <template>
+function setPrimaryGrantor(index: number) {
+  form.grantors.forEach((g, idx) => {
+    g.is_primary = idx === index;
+  });
 }
 </script>
 
@@ -814,8 +854,16 @@ function closeModal() {
               </div>
             </div>
           </div> -->
-
+          <div class="mt-8 space-y-6">
+            <div class="flex items-center gap-4 mt-2">
+              <h2 class="text-lg font-semibold">Share Amount</h2>
+              <div class="text-lg font-semibold">
+                1000 BDT
+              </div>
+            </div>
+          </div>
           <div class="grid gap-6 mt-5">
+
             <h2 class="text-lg font-semibold">Add Grantor</h2>
             <div class="flex-1 border rounded-md p-4 w-full bg-white">
               <!-- <div class="flex gap-6">
@@ -838,13 +886,12 @@ function closeModal() {
                 </div>
               </div> -->
               <!-- <div v-if="form.loan_surety_type === 'grantor'" class="mt-8 space-y-6"> -->
-              <div class="mt-8 space-y-6">
-                <!-- Grantor Input Form -->
-                <!-- <div class="bg-gray-100  rounded-xl shadow-md border border-gray-200 space-y-4"> -->
 
+
+              <div class="mt-8 space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <Label for="grantor_member_id">Grantor Member ID</Label>
+                    <Label for="grantor_member_id">Grantor PIN</Label>
                     <div class="flex items-center space-x-2">
                       <Input id="grantor_member_id" v-model="newGrantor.member_id" placeholder="Enter member ID" />
                       <CirclePlayIcon class="h-5 w-5 text-blue-500 hover:text-red-700 cursor-pointer"
@@ -889,25 +936,33 @@ function closeModal() {
                     <table class="min-w-full divide-y divide-gray-200 text-sm text-gray-700">
                       <thead class="bg-gray-200 text-xs uppercase text-gray-600">
                         <tr>
-                          <th class="px-4 py-3 text-center">Member ID</th>
-                          <th class="px-4 py-3 text-center">Deposit Amount</th>
-                          <th class="px-4 py-3 text-center">Loan Amount</th>
-                          <!-- <th class="px-4 py-3 text-center">Document</th> -->
+                          <th class="px-4 py-3 text-center">Member PIN</th>
+                          <th class="px-4 py-3 text-center">Share Amount</th>
+                          <th class="px-4 py-3 text-center">Remaining Amount</th>
+                          <th class="px-4 py-3 text-center">Primary Grantor</th>
                           <th class="px-4 py-3 text-center">Action</th>
                         </tr>
                       </thead>
                       <tbody class="divide-y divide-gray-100 bg-white">
                         <tr v-for="(g, idx) in form.grantors" :key="idx" class="hover:bg-gray-50">
-                          <td class="px-4 py-2 text-center">{{ g.name }} <br/> ({{ g.member_id }})</td>
-                          <td class="px-4 py-2 text-center">{{ g.name }}</td>
-                          <td class="px-4 py-2 text-center">{{ g.loan_amount }}</td>
-                          <!-- <td class="px-4 py-2 text-center">
-                                                            <span v-if="g.document"
-                                                                class="text-blue-600 underline cursor-pointer">
-                                                                {{ g.document.name }}
-                                                            </span>
-                                                            <span v-else class="text-gray-400">-</span>
-                                                        </td> -->
+                          <td class="px-4 py-2 text-center">{{ g.name }} <br /> ({{ g.member_id }})</td>
+                          <td class="px-4 py-2 text-center">{{ g.deposit_amount }}</td>
+                          <td class="px-4 py-2 text-center">
+                            {{
+                              (() => {
+                                const total = substructSurety();
+                                return total > 0 ? total : '0';
+                              })()
+                            }}
+                          </td>
+                          <td class="px-4 py-2 text-center">
+                            <input
+                              type="checkbox"
+                              :checked="g.is_primary"
+                              :disabled="!g.is_primary && form.grantors.some(gr => gr.is_primary)"
+                              @change="() => setPrimaryGrantor(idx)"
+                            />
+                          </td>
                           <td class="px-4 py-2 flex justify-center gap-2">
                             <Button type="button" variant="secondary" size="sm" @click="editGrantor(idx)">
                               Edit
@@ -921,9 +976,7 @@ function closeModal() {
                     </table>
                   </div>
                 </div>
-
               </div>
-
               <div v-if="form.loan_surety_type === 'self_deposit'" class="flex gap-6 mt-4 bg-gray-100 p-4 rounded-md">
                 <div class="flex-1">
                   <Label for="self_deposit_amount">Self Diposit Amount (NPCSS)</Label>
@@ -1133,7 +1186,7 @@ function closeModal() {
                 <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-green-50 mr-3">
                   <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 8c-1.1 0-2 .9-2 2s.9 2 2 2m0 0c1.1 0 2 .9 2 2s-.9 2-2 2m0-6V6m0 12v-2m8-4a8 8 0 11-16 0 8 8 0 0116 0z" />
+                      d="M12 8c-1.1 0-2 .9-2 2s.9 2 2 2m0 0c1.1 0 2 .9 2 2s-.9 2-2 2m0-6V6m0 1v8m0 0v1m0-1c-1.1 0-2.08-.402-2.599-1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <div>
@@ -1260,7 +1313,7 @@ function closeModal() {
                 <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 mr-3">
                   <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.1 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
                     </path>
                   </svg>
                 </div>
@@ -1488,7 +1541,6 @@ function closeModal() {
               </div>
             </div>
           </div>
-
 
 
           <!-- Confirmation Checkbox -->

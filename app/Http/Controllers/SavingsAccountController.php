@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ShareAccount;
+use App\Models\SavingsAccount;
 use App\Models\Member;
 use App\Models\Nominee;
 use Inertia\Inertia;
 use App\Enums\Relationship;
-use App\Models\SharePayment;
+use App\Models\SavingsPayment;
 use Illuminate\Http\Request;
 use App\Services\ApprovalService;
 use App\Enums\ApprovalStatus;
@@ -15,17 +15,17 @@ use App\Models\ApprovalHistory;
 use Illuminate\Support\Facades\DB;
 use App\Models\Application;
 
-class ShareAccountController extends Controller
+class SavingsAccountController extends Controller
 {
     public function index()
     {
-        $shareAccounts = ShareAccount::with(['member', 'nominee'])->get();
+        $savingsAccounts = SavingsAccount::with(['member', 'nominee'])->get();
         $relationshipOptions = array_map(
             fn($case) => ['value' => $case->value, 'label' => $case->label()],
             Relationship::cases()
         );
-        return Inertia::render('ShareAccounts/Index', [
-            'shareAccounts' => $shareAccounts,
+        return Inertia::render('SavingsAccounts/Index', [
+            'savingsAccounts' => $savingsAccounts,
             'relationshipOptions' => $relationshipOptions,
         ]);
     }
@@ -36,7 +36,7 @@ class ShareAccountController extends Controller
             fn($case) => ['value' => $case->value, 'label' => $case->label()],
             Relationship::cases()
         );
-        return Inertia::render('ShareAccounts/Create', [
+        return Inertia::render('SavingsAccounts/Create', [
             'relationshipOptions' => $relationshipOptions,
         ]);
     }
@@ -45,7 +45,7 @@ class ShareAccountController extends Controller
     {
         $validated = $request->validate([
             'member_id' => 'required|exists:members,id',
-            'share_account_number' => 'required|string|max:255',
+            'savings_account_number' => 'required|string|max:255',
             'initial_deposit' => 'required|numeric|min:0',
             // Nominee fields validation
             'nominee_name' => 'required|string|max:255',
@@ -54,21 +54,19 @@ class ShareAccountController extends Controller
             'contact_no' => 'required|string|max:255',
             'address' => 'nullable|string|max:255',
             'scan_image' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
-            'document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:4096', // Add document field if needed
+            'document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:4096',
         ]);
 
         DB::beginTransaction();
         try {
-            // Handle nominee scan image upload
             $scanImagePath = null;
             if ($request->hasFile('scan_image')) {
                 $scanImagePath = $request->file('scan_image')->store('nominee_scans', 'public');
             }
 
-            // Store nominee
             $nominee = Nominee::create([
                 'member_id' => $validated['member_id'],
-                'model_type' => ShareAccount::class,
+                'model_type' => SavingsAccount::class,
                 'nid_birth_no' => '', // Set as needed or add to form/validation
                 'nominee_name' => $validated['nominee_name'],
                 'relationship' => $validated['relationship'],
@@ -78,40 +76,31 @@ class ShareAccountController extends Controller
                 'scan_image' => $scanImagePath,
             ]);
 
-             
-
-            // Store share account with status 'pending'
-            $shareAccount = ShareAccount::create([
+            $savingsAccount = SavingsAccount::create([
                 'member_id' => $validated['member_id'],
-                'share_account_number' => $validated['share_account_number'],
+                'savings_account_number' => $validated['savings_account_number'],
                 'initial_deposit' => $validated['initial_deposit'],
                 'nominee_id' => $nominee->id,
                 'status' => ApprovalStatus::PENDING->value,
             ]);
 
-            
-
-            // Create application for approval process
             $application = Application::create([
-                'model_type' => ShareAccount::class,
-                'model_id' => $shareAccount->id,
+                'model_type' => SavingsAccount::class,
+                'model_id' => $savingsAccount->id,
                 'member_id' => $validated['member_id'],
                 'status' => ApprovalStatus::PENDING->value,
                 'approval_step' => 1,
                 'role' => 'Secretary',
                 'created_by' => auth()->user()->id ?? null,
                 'created_by_name' => auth()->user()->name ?? null,
-                'application_date' => now(), // Add this line to set application_date
+                'application_date' => now(),
             ]);
-        
-            // Handle document upload if present
-            $documentPath = null;
-            
 
-            // Create approval history for this application
+            $documentPath = null;
+
             $approvalService->createApprovalHistory([
                 'application_id' => $application->id,
-                'application_type' => ShareAccount::class,
+                'application_type' => SavingsAccount::class,
                 'approval_step' => 1,
                 'approval_role' => 'Secretary',
                 'status' => ApprovalStatus::FORWARDED->value,
@@ -119,15 +108,14 @@ class ShareAccountController extends Controller
                 'created_by_name' => auth()->user()->name ?? null,
             ], $documentPath);
 
-            // Store payment if initial_deposit > 0
-            if ($shareAccount->initial_deposit > 0) {
-                SharePayment::create([
-                    'share_acc_id' => $shareAccount->id,
-                    'member_id' => $shareAccount->member_id,
+            if ($savingsAccount->initial_deposit > 0) {
+                SavingsPayment::create([
+                    'savings_acc_id' => $savingsAccount->id,
+                    'member_id' => $savingsAccount->member_id,
                     'year' => now()->year,
                     'month' => now()->month,
                     'due_date' => now()->toDateString(),
-                    'amount' => $shareAccount->initial_deposit,
+                    'amount' => $savingsAccount->initial_deposit,
                     'due' => 0,
                     'payment_date' => now()->toDateString(),
                     'is_paid' => true,
@@ -136,31 +124,28 @@ class ShareAccountController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('share-accounts.index')->with('success', 'Share account request submitted and pending approval.');
+            return redirect()->route('savings-accounts.index')->with('success', 'Savings account request submitted and pending approval.');
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->with('error', 'Failed to create share account: ' . $e->getMessage());
+            return back()->with('error', 'Failed to create savings account: ' . $e->getMessage());
         }
     }
 
-    public function share_application($memberId)
+    public function savings_application($memberId)
     {
         $member = Member::findOrFail($memberId);
 
-        $shareAccount = $member->shareAccount()->first(); // assumes relation is defined
-
-       
+        $savingsAccount = $member->savingsAccount()->first();
 
         $relationshipOptions = array_map(
             fn($case) => ['value' => $case->value, 'label' => $case->label()],
             Relationship::cases()
         );
 
-        return Inertia::render('ShareAccounts/Create', [
+        return Inertia::render('SavingsAccounts/Create', [
             'member' => $member,
             'relationshipOptions' => $relationshipOptions,
-            'shareAccount' => $shareAccount,
+            'savingsAccount' => $savingsAccount,
         ]);
     }
 }
-
